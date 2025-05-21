@@ -11,4 +11,4 @@ You can install the package from GitHub using `devtools`:
 install.packages("devtools")
 
 # Install the iSensor package
-devtools::install_github("your_username/iSensor")
+devtools::install_github("MironovaLab/iSensors")
