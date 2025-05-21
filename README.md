@@ -22,4 +22,4 @@ Run
 ```
 usethis::edit_r_environ()
 ```
-and copy your token to the GITHUB_PAT=<your token>
+and copy your token to the GITHUB_PAT= your token
