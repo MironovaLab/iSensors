@@ -18,7 +18,8 @@ In case dealing with a mistake like:
 Failed to install 'unknown package' from GitHub
 ```
 You need to go to GitHub Settings -> Developer Settings and generate your token.
-Run```
+Run
+```
 usethis::edit_r_environ()
 ```
 and copy your token to the GITHUB_PAT=<your token>
