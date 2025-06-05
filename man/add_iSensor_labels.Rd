@@ -7,31 +7,23 @@
 add_iSensor_labels(iSensor_obj, labels)
 }
 \arguments{
-\item{iSensor_obj}{An iSensor object to which the sample labels will be added.}
+\item{iSensor_obj}{An iSensor object created by \code{create_iSensor}}
 
-\item{labels}{A character vector containing labels for each sample in the expression data.}
+\item{labels}{Character vector of sample labels (length must match number of samples)}
 }
 \value{
-Updated iSensor object with the new sample labels included.
+The modified iSensor object with updated sample labels
 }
 \description{
-Assigns sample labels to the specified iSensor object, linking them to the expression data.
+Adds or updates sample labels in an iSensor object. The labels must match
+the number of samples (columns) in the expression data matrix.
 }
-\section{Details}{
-
-This function checks if the length of the provided labels matches the number of samples 
-in the expression data. If the lengths match, the labels are assigned to the iSensor object, 
-allowing for easier identification of samples during analysis.
-}
-
 \examples{
-\dontrun{
-# Example of adding sample labels to an iSensor object
-iSensor_obj <- add_iSensor_labels(iSensor_obj, c("Sample1", "Sample2", "Sample3"))
-}
+# Create iSensor object
+iSensor_obj <- create_iSensor(data = matrix(rnorm(100), nrow = 10))
 
-}
-\seealso{
-\code{\link{iSensor_pipeline}}, \code{\link{add_iSensor_data}}, 
-\code{\link{set_iSensor_workPanel}}
+# Add sample labels
+sample_labels <- paste0("Sample", 1:10)
+iSensor_obj <- add_iSensor_labels(iSensor_obj, sample_labels)
+
 }

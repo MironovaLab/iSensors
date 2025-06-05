@@ -2,37 +2,26 @@
 % Please edit documentation in R/iSensor.R
 \name{set_iSensor_workPanel}
 \alias{set_iSensor_workPanel}
-\title{Set Working iSensor Gene Panel}
+\title{Set Active Gene Panels for iSensor Analysis}
 \usage{
-set_iSensor_workPanel(iSensor_obj, panelSet = "Auxin")
+set_iSensor_workPanel(iSensor_obj, panelSet = "allSpec_allHorm_allType")
 }
 \arguments{
-\item{iSensor_obj}{An iSensor object containing gene panel sets.}
+\item{iSensor_obj}{An iSensor analysis object created by \code{create_iSensor}}
 
-\item{panelSet}{Character string specifying the name of the gene panel set to use. 
-Default is 'Auxin'.}
+\item{panelSet}{Name of the panel set to activate (default: 'allSpec_allHorm_allType')}
 }
 \value{
-Updated iSensor object with the selected gene panel set assigned.
+The modified iSensor object with updated active gene panels
 }
 \description{
-Configures the iSensor object to use a specified gene panel set for analysis.
+Selects a predefined set of gene panels to use for subsequent analysis steps
+in the iSensor pipeline. The specified panel set must exist in the iSensor object.
 }
-\section{Details}{
-
-This function checks if the specified panel set exists in the iSensor object. 
-If it does, the function assigns the corresponding gene panels to the iSensor object 
-for subsequent analysis.
-}
-
 \examples{
 \dontrun{
-# Example of setting a working panel
-iSensor_obj <- set_iSensor_workPanel(iSensor_obj, panelSet = 'Cytokinin')
+# After creating an iSensor object:
+iSensor_obj <- set_iSensor_workPanel(iSensor_obj, panelSet = "my_panels")
 }
 
-}
-\seealso{
-\code{\link{iSensor_pipeline}}, \code{\link{create_iSensor}}, 
-\code{\link{add_iSensor_random_panel}}, \code{\link{iSensor_signal}}
 }

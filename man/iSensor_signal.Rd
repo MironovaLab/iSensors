@@ -2,7 +2,7 @@
 % Please edit documentation in R/iSensor.R
 \name{iSensor_signal}
 \alias{iSensor_signal}
-\title{Calculate iSensor Signals for Gene Panels}
+\title{Calculate Panel Signals for iSensor Object}
 \usage{
 iSensor_signal(
   iSensor_obj,
@@ -16,50 +16,56 @@ iSensor_signal(
 )
 }
 \arguments{
-\item{iSensor_obj}{An iSensor object containing expression data and gene panels.}
+\item{iSensor_obj}{An iSensor object created by `create_iSensor`}
 
-\item{panels}{Optional character vector of specific gene panel names to use. 
-If NULL, all available panels will be used.}
+\item{panels}{Character vector of panel names to analyze (NULL uses all panels)}
 
-\item{transform}{Character string specifying the transformation method to use. 
-Options are 'mean' or 'median'.}
+\item{transform}{Aggregation method: 'mean' or 'median'}
 
-\item{normed}{Logical indicating whether to normalize the signals. Default is FALSE.}
+\item{normed}{Logical indicating whether to normalize signals (default: FALSE)}
 
-\item{normBy}{Character string specifying the normalization method. Options are 'cols' or 'rows'. 
-Default is 'cols'.}
+\item{normBy}{Normalization direction: 'cols' (by samples) or 'rows' (by genes)}
 
-\item{metaPanels}{Optional list defining meta-panels and their calculation rules.}
+\item{metaPanels}{List specifying meta-panels to create (see Details)}
 
-\item{doParallel}{Logical indicating whether to use parallel processing. Default is FALSE.}
+\item{doParallel}{Logical indicating whether to use parallel processing (default: FALSE)}
 
-\item{nCores}{Number of cores for parallel processing if doParallel=TRUE. Default is NULL 
-(autodetect).}
+\item{nCores}{Number of cores for parallel processing (NULL uses available-1)}
 }
 \value{
-Updated iSensor object with calculated signals added to the Signals slot.
+The modified iSensor object with computed signals stored in `Signals` slot
 }
 \description{
-Computes signaling activity scores for specified gene panels in the iSensor object, 
-using either mean or median transformations, with optional normalization.
+Computes aggregated signals (mean/median) for each gene panel in an iSensor object.
+Supports normalization options and parallel processing for large datasets.
 }
-\section{Details}{
-
-This function checks if the expression data in the iSensor object is available. It then 
-computes the specified signal (mean or median) for each gene panel, with optional normalization 
-based on the specified method. The results are stored in the Signals slot of the iSensor object.
-If meta-panels are provided, they will be calculated based on the specified rules.
+\details{
+The `metaPanels` parameter should be a named list where each element contains:
+\itemize{
+  \item `srcPanels`: Vector of source panel names
+  \item `rule`: Function to combine signals (e.g., `prod`, `sum`)
 }
-
+}
 \examples{
 \dontrun{
-# Example of calculating signals for an iSensor object
-iSensor_obj <- iSensor_signal(iSensor_obj, panels = c("panel1", "panel2"), 
-                               transform = "mean", normed = TRUE)
+# Calculate mean signals
+iSensor_obj <- iSensor_signal(iSensor_obj, transform = "mean")
+
+# Calculate normalized median signals with parallel processing
+iSensor_obj <- iSensor_signal(iSensor_obj, 
+                             transform = "median",
+                             normed = TRUE,
+                             doParallel = TRUE)
+
+# With custom meta-panel
+iSensor_obj <- iSensor_signal(iSensor_obj,
+                             transform = "mean",
+                             metaPanels = list(
+                               "MyMeta" = list(
+                                 srcPanels = c("Panel1", "Panel2"),
+                                 rule = prod
+                               )
+                             ))
 }
 
-}
-\seealso{
-\code{\link{iSensor_pipeline}}, \code{\link{add_iSensor_workPanel}}, 
-\code{\link{add_defaultPanels}}, \code{\link{add_iSensor_random_panel}}
 }

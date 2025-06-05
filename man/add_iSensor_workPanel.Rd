@@ -7,36 +7,25 @@
 add_iSensor_workPanel(iSensor_obj, panels, drop = FALSE)
 }
 \arguments{
-\item{iSensor_obj}{An iSensor object to which the gene panels will be added.}
+\item{iSensor_obj}{An iSensor object created by `create_iSensor`}
 
-\item{panels}{A list of gene panels to be added or updated in the iSensor object.}
+\item{panels}{Named list of gene panels to add/update (each element should be a character vector of genes)}
 
-\item{drop}{Logical indicating whether to drop existing panels that are not included in the new panels. Default is FALSE.}
+\item{drop}{Logical indicating whether to replace existing panels (FALSE) or keep both (TRUE) (default: FALSE)}
 }
 \value{
-Updated iSensor object with the new and updated gene panels included.
+The modified iSensor object with updated gene panels
 }
 \description{
-Incorporates additional gene panels into the specified iSensor object, updating existing panels 
-and adding new ones as necessary.
+Adds new gene panels or updates existing panels in an iSensor object. 
+Existing panels with matching names will be updated unless `drop = TRUE`.
 }
-\section{Details}{
-
-This function checks for existing gene panels in the iSensor object and updates them 
-with the new panels provided. If a panel already exists, it will be replaced; otherwise, 
-it will be added to the iSensor object. The `drop` parameter controls whether panels 
-not included in the new list should be removed.
-}
-
 \examples{
-\dontrun{
-# Example of adding gene panels to an iSensor object
-new_panels <- list(panel1 = gene_data1, panel2 = gene_data2)
-iSensor_obj <- add_iSensor_workPanel(iSensor_obj, new_panels)
-}
+# Create iSensor object
+iSensor_obj <- create_iSensor(data = matrix(rnorm(100), nrow = 10))
 
-}
-\seealso{
-\code{\link{iSensor_pipeline}}, \code{\link{set_iSensor_workPanel}}, 
-\code{\link{add_defaultPanels}}
+# Add new gene panel
+new_panel <- list("MyPanel" = c("Gene1", "Gene2", "Gene3"))
+iSensor_obj <- add_iSensor_workPanel(iSensor_obj, new_panel)
+
 }

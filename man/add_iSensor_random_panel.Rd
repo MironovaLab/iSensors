@@ -7,38 +7,28 @@
 add_iSensor_random_panel(iSensor_obj, randNum, randSize, majortrend = TRUE)
 }
 \arguments{
-\item{iSensor_obj}{An iSensor object to which the random gene panels will be added.}
+\item{iSensor_obj}{An iSensor object created by `create_iSensor`}
 
-\item{randNum}{Integer specifying the number of random panels to generate.}
+\item{randNum}{Number of random panels to generate (must match length of `randSize`)}
 
-\item{randSize}{Numeric vector specifying the sizes of the random panels. The length 
-of this vector must match `randNum`.}
+\item{randSize}{Vector specifying sizes for each random panel}
 
-\item{majortrend}{Logical indicating whether to include a major trend panel based on 
-all features. Default is TRUE.}
+\item{majortrend}{Logical indicating whether to include a panel with all genes (default: TRUE)}
 }
 \value{
-Updated iSensor object with new random gene panels included.
+The modified iSensor object with added random panels
 }
 \description{
-Generates random gene panels based on the expression data in the iSensor object and 
-adds them to the specified iSensor object.
+Generates and adds random gene panels to an iSensor object. Can optionally include
+a "majortrend" panel containing all genes. Each random panel samples genes without replacement.
 }
-\section{Details}{
-
-This function checks if the expression data in the iSensor object is available. It then 
-generates random gene panels of specified sizes and adds them to the iSensor object. 
-A major trend panel, containing all features, is also included by default.
-}
-
 \examples{
-\dontrun{
-# Example of adding random gene panels to an iSensor object
-iSensor_obj <- add_iSensor_random_panel(iSensor_obj, randNum = 3, randSize = c(100, 200, 300))
-}
+# Create iSensor object with 1000 genes
+iSensor_obj <- create_iSensor(data = matrix(rnorm(10000), nrow = 1000))
 
-}
-\seealso{
-\code{\link{iSensor_pipeline}}, \code{\link{add_iSensor_workPanel}}, 
-\code{\link{add_defaultPanels}}
+# Add 3 random panels of different sizes
+iSensor_obj <- add_iSensor_random_panel(iSensor_obj, 
+                                      randNum = 3,
+                                      randSize = c(50, 100, 200))
+
 }

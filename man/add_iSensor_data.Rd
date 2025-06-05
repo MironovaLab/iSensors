@@ -7,30 +7,23 @@
 add_iSensor_data(iSensor_obj, data)
 }
 \arguments{
-\item{iSensor_obj}{An iSensor object to which the expression data will be added.}
+\item{iSensor_obj}{An iSensor object created by \code{create_iSensor}}
 
-\item{data}{A matrix or data frame containing the expression data to be assigned.}
+\item{data}{Numeric matrix of expression values (genes x samples)}
 }
 \value{
-Updated iSensor object with the new expression data included.
+The modified iSensor object with updated expression data
 }
 \description{
-Assigns expression data to the specified iSensor object for further analysis.
+Updates or replaces the expression data matrix in an existing iSensor analysis object.
+The input matrix should have genes as rows and samples as columns.
 }
-\section{Details}{
-
-This function updates the expression data slot of the iSensor object with the 
-provided data, allowing for subsequent analysis using the iSensor framework.
-}
-
 \examples{
-\dontrun{
-# Example of adding expression data to an iSensor object
-iSensor_obj <- add_iSensor_data(iSensor_obj, expression_data_matrix)
-}
+# Create initial object
+iSensor_obj <- create_iSensor(data = matrix(rnorm(100), nrow = 10))
 
-}
-\seealso{
-\code{\link{iSensor_pipeline}}, \code{\link{set_iSensor_workPanel}}, 
-\code{\link{add_defaultPanels}}
+# Add new data
+new_data <- matrix(rnorm(200), nrow = 10)
+iSensor_obj <- add_iSensor_data(iSensor_obj, new_data)
+
 }

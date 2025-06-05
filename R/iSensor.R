@@ -1,92 +1,73 @@
-#' Execute iSensor Analysis Pipeline on Seurat Object
-#' 
-#' Performs comprehensive gene panel analysis of single-cell RNA-seq data stored in a Seurat object,
-#' calculating signaling activity scores for specified gene panels and storing results as new assays.
+#' @title iSensor Analysis Pipeline for Seurat Objects
 #'
-#' @import Seurat
+#' @description 
+#' Main pipeline for analyzing single-cell RNA-seq data using iSensor framework.
+#' Computes gene panel signatures and stores results as new assays in Seurat object.
+#' Supports parallel processing, custom panels, and meta-panel creation.
 #'
-#' @param seuratObject A Seurat object containing single-cell expression data
-#' @param presetPanels Character vector specifying which predefined gene panels to use.
-#'        Default is 'Auxin'. Multiple panels can be specified (e.g., c('Auxin', 'Cytokinin'))
-#' @param signals Character vector of signal calculation methods to apply. Options include:
-#'        \itemize{
-#'          \item 'mean' - Simple mean expression
-#'          \item 'mean_normed' - Mean expression with normalization (default)
-#'          \item 'median' - Median expression
-#'          \item 'median_normed' - Median expression with normalization
-#'        }
-#' @param seurLayer Character specifying which Seurat assay layer to use ('data', 'counts', or 'scale.data').
-#'        Default is "data"
-#' @param randPanels Integer specifying number of random gene panels to generate for background comparison.
-#'        Default is 2
-#' @param randSize Integer vector of length 2 specifying size range (min,max) for random panels.
-#'        Default is c(200, 500)
-#' @param majortrend Logical indicating whether to maintain major expression trends in random panels.
-#'        Default is TRUE
-#' @param usePanels Optional character vector of specific panel names to analyze. If NULL, uses all available panels.
-#'        Default is NULL
-#' @param defaultAssay Character specifying which iSensor assay to set as default in output Seurat object.
-#'        If NULL, keeps current default assay. Default is NULL
-#' @param useParallel Logical indicating whether to use parallel processing. Default is FALSE
-#' @param nCores Integer specifying number of cores for parallel processing if useParallel=TRUE.
-#'        If NULL, uses available cores - 1. Default is NULL
-#' @param metaPanels List defining composite meta-panels and their calculation rules. Each element should be:
-#'        \itemize{
-#'          \item A list with 'srcPanels' (character vector of source panels)
-#'          \item 'rule' (function to combine panels, e.g., prod for product)
-#'        }
-#'        Default example combines two auxin panels using product
+#' @param seuratObject A Seurat object (v3+) containing single-cell data
+#' @param species Species for default panels ("AT", etc.)
+#' @param hormone Hormone type for panel filtering (optional)
+#' @param type Panel type for panel filtering (optional)
+#' @param signals Vector of signals to compute: 'mean', 'mean_normed',
+#'        'median', 'median_normed' (default: 'mean_normed')
+#' @param seurLayer Seurat assay layer to use ("data", "counts", etc.)
+#' @param usePanelPreset Custom panel set to add (overrides species/hormone/type)
+#' @param presetPanelName Name for custom panel set (required if usePanelPreset specified)
+#' @param randPanels Number of random panels to generate (default: 2)
+#' @param randSize Size range for random panels (default: c(200, 500))
+#' @param majortrend Whether to include all genes as "majortrend" panel (default: TRUE)
+#' @param usePanels Specific panels to analyze (NULL uses all available)
+#' @param defaultAssay Name of iSensor assay to set as default (optional)
+#' @param useParallel Enable parallel processing (default: FALSE)
+#' @param nCores Number of cores for parallel processing (NULL uses available-1)
+#' @param metaPanels List of meta-panels to create (see Details)
 #'
-#' @return Modified Seurat object with new assays containing iSensor signaling activity scores.
-#'         Each assay is named as 'iSensor_[signal_type]' (e.g., 'iSensor_mean_normed')
+#' @details
+#' Meta-panels should be specified as named lists with:
+#' \itemize{
+#'   \item \code{srcPanels}: Vector of source panel names
+#'   \item \code{rule}: Combination function (e.g., \code{prod}, \code{sum})
+#' }
+#'
+#' @return
+#' Modified Seurat object with new assays:
+#' \itemize{
+#'   \item Each signal type becomes separate assay (names: 'iSensor_[signal]')
+#'   \item Original data remains unchanged
+#'   \item Meta-panels included if specified
+#' }
 #'
 #' @examples
 #' \dontrun{
-#' # Basic analysis with defaults
+#' # Basic analysis with default parameters
 #' seurat_obj <- iSensor_pipeline(seurat_obj)
 #'
-#' # Advanced analysis with multiple panels and signals
+#' # Advanced analysis with custom settings
 #' seurat_obj <- iSensor_pipeline(
-#'     seurat_obj,
-#'     presetPanels = c('Auxin', 'Cytokinin'),
-#'     signals = c('mean_normed', 'median')
-#'     metaPanels = list(
-#'         'MyMeta' = list(
-#'             srcPanels = c('Panel1', 'Panel2'),
-#'             rule = mean
-#'         )
+#'   seurat_obj,
+#'   species = "human",
+#'   signals = c("mean", "median_normed"),
+#'   randPanels = 3,
+#'   metaPanels = list(
+#'     "MyMeta" = list(
+#'       srcPanels = c("Panel1", "Panel2"),
+#'       rule = function(x) sqrt(mean(x))
 #'     )
+#'   )
 #' )
 #' }
 #'
-#' @section Analysis Workflow:
-#' The pipeline performs these key steps:
-#' \enumerate{
-#'   \item Extracts expression matrix from Seurat object
-#'   \item Initializes iSensor analysis object
-#'   \item Loads specified gene panels
-#'   \item Generates random background panels (if enabled)
-#'   \item Calculates all requested signal types
-#'   \item Stores results as new assays in Seurat object
-#' }
-#'
-#' @section Technical Details:
-#' Signal calculation methods:
-#' \describe{
-#'   \item{mean/median}{Simple average or median expression of panel genes}
-#'   \item{*_normed}{Normalized by background (random panels or specified method)}
-#' }
-#'
 #' @seealso
-#' \code{\link{create_iSensor}} for object initialization,
-#' \code{\link{iSensor_signal}} for signal calculation details,
-#' \code{\link{set_iSensor_workPanel}} for panel management
+#' \code{\link{create_iSensor}}, \code{\link{iSensor_signal}}
 #'
+#' @importFrom Seurat GetAssayData CreateAssayObject DefaultAssay
 #' @export
-iSensor_pipeline <- function(seuratObject, presetPanels = 'Auxin', signals = c('mean_normed'), seurLayer = "data",
+iSensor_pipeline <- function(seuratObject, species = NULL, hormone = NULL, type = NULL, signals = c('mean_normed'), seurLayer = "data",
+                             usePanelPreset = NULL, presetPanelName = NULL,
                              randPanels = 2, randSize = c(200, 500), majortrend = TRUE,
                              usePanels = NULL, defaultAssay = NULL, useParallel = FALSE, nCores = NULL,
-                             metaPanels = list('R2D2' = list('srcPanels' = c('AT_aux_trans_A-ARF', 'AT_aux_trans_IAA'),
+                             metaPanels = list('R2D2' = list('srcPanels' = c('AT_aux_trans_A_ARF', 'AT_aux_trans_IAA'),
                                                              'rule' = prod))) {
     if (class(seuratObject) != 'Seurat') {
         stop("Error: function must be applied to Seurat object")
@@ -94,8 +75,16 @@ iSensor_pipeline <- function(seuratObject, presetPanels = 'Auxin', signals = c('
 
     expression_data <- as.matrix(GetAssayData(seuratObject, layer = seurLayer))
     expression_data[is.nan(expression_data)] <- 0
-    iSensor_test <- create_iSensor(data = expression_data)
-    iSensor_test <- set_iSensor_workPanel(iSensor_test, presetPanels)
+    iSensor_test <- create_iSensor(data = expression_data, species = species, hormone = hormone, type = type)
+    if(!is.null(usePanelPreset)) {
+        iSensor_test <- add_iSensor_panelSet(iSensor_test, panelsSet = usePanelPreset, setName = presetPanelName)
+        iSensor_test <- set_iSensor_workPanel(iSensor_test, presetPanelName)
+    }
+    if(is.null(presetPanelName)) {
+        presetPanelName <- names(iSensor_test$genePanelSets)[1]
+    }
+    cat(presetPanelName, ' panel preset will be used', '\n')
+    iSensor_test <- set_iSensor_workPanel(iSensor_test, presetPanelName)
     iSensor_test <- add_iSensor_random_panel(iSensor_test, randNum=randPanels, randSize=randSize,
                                          majortrend = majortrend)
 
@@ -134,111 +123,69 @@ iSensor_pipeline <- function(seuratObject, presetPanels = 'Auxin', signals = c('
     return(seuratObject)
 }
 
-#' Initialize an iSensor Analysis Object
+#' @title Create iSensor Analysis Object
+#' 
+#' @description 
+#' Initializes an iSensor analysis object that stores expression data and gene panels 
+#' for subsequent processing in the iSensor pipeline.
 #'
-#' Creates a new iSensor object for gene panel analysis, serving as the foundation
-#' for all subsequent iSensor pipeline operations. The object stores expression data,
-#' gene panels, and analysis results in a structured format.
+#' @param data Numeric matrix of expression data (genes in rows, samples in columns)
+#' @param panels Optional list of custom gene panels (named character vectors)
+#' @param labels Optional vector of sample labels or conditions
+#' @param species Species specification for default panels ("AT")
+#' @param hormone Optional hormone type specification for panel filtering
+#' @param type Optional tissue/cell type specification for panel filtering 
+#' @param format Format for default panels ("rda" or "list", default: "rda")
 #'
-#' @param data A numeric matrix of gene expression data where:
-#'        \itemize{
-#'          \item Rows represent genes (features)
-#'          \item Columns represent samples/cells
-#'          \item Row names should be gene identifiers
-#'          \item Column names should be sample/cell identifiers
-#'        }
-#'        If NULL, creates an empty object (default: NULL)
-#' @param panels Optional named list of gene panels where each element is:
-#'        \itemize{
-#'          \item A character vector of gene names
-#'          \item Named with the panel identifier
-#'        }
-#'        (default: NULL)
-#' @param labels Optional vector of sample/cell labels corresponding to columns
-#'        in the expression matrix (default: NULL)
-#'
-#' @return An object of class `iSensor` containing:
-#' \describe{
-#'   \item{exprData}{Input expression matrix}
-#'   \item{genePanels}{List of gene panels}
-#'   \item{Signals}{Placeholder for calculated signaling activity (initialized NULL)}
-#'   \item{sampleLabels}{Sample/cell labels}
-#'   \item{importance}{Placeholder for feature importance scores (initialized NULL)}
-#'   \item{genePanelSets}{Placeholder for panel sets (initialized NULL)}
+#' @return An object of class "iSensor" containing:
+#' \itemize{
+#'   \item Input expression data
+#'   \item Gene panels (custom and/or default)
+#'   \item Placeholders for computed signals and importance scores
 #' }
 #'
 #' @examples
-#' # Create empty iSensor object
-#' iSensor_obj <- create_iSensor()
+#' # Basic usage with expression data only
+#' expr_data <- matrix(rnorm(1000), nrow = 100)
+#' sensor_obj <- create_iSensor(data = expr_data)
 #'
-#' # Initialize with expression data
-#' expr_data <- matrix(rnorm(1000), nrow=100, 
-#'                     dimnames=list(paste0("gene", 1:100), paste0("cell", 1:10)))
-#' iSensor_obj <- create_iSensor(data = expr_data)
-#'
-#' # With custom panels
-#' custom_panels <- list(
-#'   "Pathway_A" = c("gene1", "gene5", "gene20"),
-#'   "Pathway_B" = c("gene3", "gene8", "gene15")
-#' )
-#' iSensor_obj <- create_iSensor(data = expr_data, panels = custom_panels)
-#'
-#' @section Object Structure:
-#' The iSensor object uses S3 class system and automatically loads default panels
-#' via \code{\link{add_defaultPanels}}. Key features:
-#' \itemize{
-#'   \item Maintains compatibility with Seurat objects via \code{\link{iSensor_pipeline}}
-#'   \item Designed for both single-cell and bulk RNA-seq analysis
-#'   \item Extensible structure for additional analysis components
-#' }
-#'
-#' @seealso
-#' \code{\link{add_defaultPanels}} for loading default gene panels,
-#' \code{\link{iSensor_pipeline}} for Seurat integration,
-#' \code{\link{set_iSensor_workPanel}} for panel management
-#'
+#' @seealso \code{\link{iSensor_pipeline}} for the complete analysis workflow
 #' @export
-create_iSensor <- function(data = NULL, panels = NULL, labels = NULL) {
+create_iSensor <- function(data = NULL, panels = NULL, labels = NULL,
+                           species = NULL, hormone = NULL, type = NULL, format = 'rda') {
     iSensor_obj <- list('exprData' = data,
                         'genePanels' = panels,
                         'Signals' = NULL,
                         'sampleLabels' = labels,
                         'importance' = NULL,
-                        'genePanelSets' = NULL)
+                        'genePanelSets' = NULL,
+                        'metaData' = NULL)
     class(iSensor_obj) <- "iSensor"
     
-    iSensor_obj <- add_defaultPanels(iSensor_obj)
+    iSensor_obj <- add_defaultPanels(iSensor_obj, species = species, hormone = hormone, type = type, format = 'rda')
     
     return(iSensor_obj)
 }
 
-#' Set Working iSensor Gene Panel
+#' @title Set Active Gene Panels for iSensor Analysis
+#' 
+#' @description 
+#' Selects a predefined set of gene panels to use for subsequent analysis steps
+#' in the iSensor pipeline. The specified panel set must exist in the iSensor object.
 #'
-#' Configures the iSensor object to use a specified gene panel set for analysis.
+#' @param iSensor_obj An iSensor analysis object created by \code{create_iSensor}
+#' @param panelSet Name of the panel set to activate (default: 'allSpec_allHorm_allType')
 #'
-#' @param iSensor_obj An iSensor object containing gene panel sets.
-#' @param panelSet Character string specifying the name of the gene panel set to use. 
-#'        Default is 'Auxin'.
-#'
-#' @return Updated iSensor object with the selected gene panel set assigned.
+#' @return The modified iSensor object with updated active gene panels
 #'
 #' @examples
 #' \dontrun{
-#' # Example of setting a working panel
-#' iSensor_obj <- set_iSensor_workPanel(iSensor_obj, panelSet = 'Cytokinin')
+#' # After creating an iSensor object:
+#' iSensor_obj <- set_iSensor_workPanel(iSensor_obj, panelSet = "my_panels")
 #' }
-#' 
-#' @section Details:
-#' This function checks if the specified panel set exists in the iSensor object. 
-#' If it does, the function assigns the corresponding gene panels to the iSensor object 
-#' for subsequent analysis.
-#'
-#' @seealso
-#' \code{\link{iSensor_pipeline}}, \code{\link{create_iSensor}}, 
-#' \code{\link{add_iSensor_random_panel}}, \code{\link{iSensor_signal}}
 #'
 #' @export
-set_iSensor_workPanel <- function(iSensor_obj, panelSet = 'Auxin') {
+set_iSensor_workPanel <- function(iSensor_obj, panelSet = 'allSpec_allHorm_allType') {
     if (!(panelSet %in% names(iSensor_obj$genePanelSets))) {
         stop("Error: no such panel in iSensor_obj$genePanelSets")
     }
@@ -249,69 +196,24 @@ set_iSensor_workPanel <- function(iSensor_obj, panelSet = 'Auxin') {
     return(iSensor_obj)
 }
 
-#' Add Default Gene Panels to iSensor Object
+#' @title Add Expression Data to iSensor Object
 #'
-#' Loads default gene panels from the package's extdata directory and adds them 
-#' to the specified iSensor object.
+#' @description 
+#' Updates or replaces the expression data matrix in an existing iSensor analysis object.
+#' The input matrix should have genes as rows and samples as columns.
 #'
-#' @param iSensor_obj An iSensor object to which the default gene panels will be added.
+#' @param iSensor_obj An iSensor object created by \code{create_iSensor}
+#' @param data Numeric matrix of expression values (genes x samples)
 #'
-#' @return Updated iSensor object with default gene panels included.
-#'
-#' @examples
-#' \dontrun{
-#' # Example of adding default panels to an iSensor object
-#' iSensor_obj <- add_defaultPanels(iSensor_obj)
-#' }
-#' 
-#' @section Details:
-#' This function retrieves gene panel directories from the package's extdata folder, 
-#' reads the panel files, and adds them to the iSensor object as new panel sets. 
-#' Each folder in the directory corresponds to a different hormone panel.
-#'
-#' @seealso
-#' \code{\link{iSensor_pipeline}}, \code{\link{set_iSensor_workPanel}}, 
-#' \code{\link{add_iSensor_panelSet}}, \code{\link{read_genePanels}}
-#'
-#' @export
-add_defaultPanels <- function(iSensor_obj) {
-    panelsDir <- system.file("extdata/geneSensors", package = "iSensor")
-    # panelsDir <- 'geneSensors/'
-    folders <- list.dirs(path = panelsDir, full.names = FALSE, recursive = FALSE)
-    
-    for (horm in folders) {
-        tmpDir <- file.path(panelsDir, horm)
-        panel <- read_genePanels(panelsDir = tmpDir,
-                                 panelsFiles = list.files(path = tmpDir, full.names = FALSE),
-                                )
-        iSensor_obj <- add_iSensor_panelSet(iSensor_obj, panelsSet=panel, setName = horm)
-    }
-
-    return(iSensor_obj)
-}
-
-#' Add Expression Data to iSensor Object
-#'
-#' Assigns expression data to the specified iSensor object for further analysis.
-#'
-#' @param iSensor_obj An iSensor object to which the expression data will be added.
-#' @param data A matrix or data frame containing the expression data to be assigned.
-#'
-#' @return Updated iSensor object with the new expression data included.
+#' @return The modified iSensor object with updated expression data
 #'
 #' @examples
-#' \dontrun{
-#' # Example of adding expression data to an iSensor object
-#' iSensor_obj <- add_iSensor_data(iSensor_obj, expression_data_matrix)
-#' }
+#' # Create initial object
+#' iSensor_obj <- create_iSensor(data = matrix(rnorm(100), nrow = 10))
 #' 
-#' @section Details:
-#' This function updates the expression data slot of the iSensor object with the 
-#' provided data, allowing for subsequent analysis using the iSensor framework.
-#'
-#' @seealso
-#' \code{\link{iSensor_pipeline}}, \code{\link{set_iSensor_workPanel}}, 
-#' \code{\link{add_defaultPanels}}
+#' # Add new data
+#' new_data <- matrix(rnorm(200), nrow = 10)
+#' iSensor_obj <- add_iSensor_data(iSensor_obj, new_data)
 #'
 #' @export
 add_iSensor_data <- function(iSensor_obj, data) {
@@ -319,29 +221,24 @@ add_iSensor_data <- function(iSensor_obj, data) {
     return(iSensor_obj)
 }
 
-#' Add Sample Labels to iSensor Object
+#' @title Add Sample Labels to iSensor Object
 #'
-#' Assigns sample labels to the specified iSensor object, linking them to the expression data.
+#' @description 
+#' Adds or updates sample labels in an iSensor object. The labels must match
+#' the number of samples (columns) in the expression data matrix.
 #'
-#' @param iSensor_obj An iSensor object to which the sample labels will be added.
-#' @param labels A character vector containing labels for each sample in the expression data.
+#' @param iSensor_obj An iSensor object created by \code{create_iSensor}
+#' @param labels Character vector of sample labels (length must match number of samples)
 #'
-#' @return Updated iSensor object with the new sample labels included.
+#' @return The modified iSensor object with updated sample labels
 #'
 #' @examples
-#' \dontrun{
-#' # Example of adding sample labels to an iSensor object
-#' iSensor_obj <- add_iSensor_labels(iSensor_obj, c("Sample1", "Sample2", "Sample3"))
-#' }
+#' # Create iSensor object
+#' iSensor_obj <- create_iSensor(data = matrix(rnorm(100), nrow = 10))
 #' 
-#' @section Details:
-#' This function checks if the length of the provided labels matches the number of samples 
-#' in the expression data. If the lengths match, the labels are assigned to the iSensor object, 
-#' allowing for easier identification of samples during analysis.
-#'
-#' @seealso
-#' \code{\link{iSensor_pipeline}}, \code{\link{add_iSensor_data}}, 
-#' \code{\link{set_iSensor_workPanel}}
+#' # Add sample labels
+#' sample_labels <- paste0("Sample", 1:10)
+#' iSensor_obj <- add_iSensor_labels(iSensor_obj, sample_labels)
 #'
 #' @export
 add_iSensor_labels <- function(iSensor_obj, labels) {
@@ -353,33 +250,25 @@ add_iSensor_labels <- function(iSensor_obj, labels) {
     return(iSensor_obj)
 }
 
-#' Add Gene Panels to iSensor Object
+#' @title Add Gene Panels to iSensor Object
 #'
-#' Incorporates additional gene panels into the specified iSensor object, updating existing panels 
-#' and adding new ones as necessary.
+#' @description 
+#' Adds new gene panels or updates existing panels in an iSensor object. 
+#' Existing panels with matching names will be updated unless `drop = TRUE`.
 #'
-#' @param iSensor_obj An iSensor object to which the gene panels will be added.
-#' @param panels A list of gene panels to be added or updated in the iSensor object.
-#' @param drop Logical indicating whether to drop existing panels that are not included in the new panels. Default is FALSE.
+#' @param iSensor_obj An iSensor object created by `create_iSensor`
+#' @param panels Named list of gene panels to add/update (each element should be a character vector of genes)
+#' @param drop Logical indicating whether to replace existing panels (FALSE) or keep both (TRUE) (default: FALSE)
 #'
-#' @return Updated iSensor object with the new and updated gene panels included.
+#' @return The modified iSensor object with updated gene panels
 #'
 #' @examples
-#' \dontrun{
-#' # Example of adding gene panels to an iSensor object
-#' new_panels <- list(panel1 = gene_data1, panel2 = gene_data2)
-#' iSensor_obj <- add_iSensor_workPanel(iSensor_obj, new_panels)
-#' }
+#' # Create iSensor object
+#' iSensor_obj <- create_iSensor(data = matrix(rnorm(100), nrow = 10))
 #' 
-#' @section Details:
-#' This function checks for existing gene panels in the iSensor object and updates them 
-#' with the new panels provided. If a panel already exists, it will be replaced; otherwise, 
-#' it will be added to the iSensor object. The `drop` parameter controls whether panels 
-#' not included in the new list should be removed.
-#'
-#' @seealso
-#' \code{\link{iSensor_pipeline}}, \code{\link{set_iSensor_workPanel}}, 
-#' \code{\link{add_defaultPanels}}
+#' # Add new gene panel
+#' new_panel <- list("MyPanel" = c("Gene1", "Gene2", "Gene3"))
+#' iSensor_obj <- add_iSensor_workPanel(iSensor_obj, new_panel)
 #'
 #' @export
 add_iSensor_workPanel <- function(iSensor_obj, panels, drop = FALSE) {
@@ -391,34 +280,28 @@ add_iSensor_workPanel <- function(iSensor_obj, panels, drop = FALSE) {
     return(iSensor_obj)
 }
 
-#' Add Gene Panel Set to iSensor Object
+#' @title Add Panel Set to iSensor Object
+#' 
+#' @description 
+#' Adds a new set of gene panels to an iSensor object. The panel set can be either
+#' a single panel or multiple panels combined into a named set.
 #'
-#' Adds a new set of gene panels to the specified iSensor object, allowing for organized 
-#' management of multiple panel sets.
+#' @param iSensor_obj An iSensor object (created by `create_iSensor`)
+#' @param panelsSet List of gene panels to add (either a single panel or multiple panels)
+#' @param setName Optional name for the panel set (autogenerated if NULL)
 #'
-#' @param iSensor_obj An iSensor object to which the gene panel set will be added.
-#' @param panelsSet A list of gene panels to be included in the new panel set.
-#' @param setName Optional character string specifying the name of the new panel set. 
-#'        If NULL, a default name will be generated. Default is NULL.
-#'
-#' @return Updated iSensor object with the new gene panel set included.
+#' @return The modified iSensor object with the new panel set added to `genePanelSets`
 #'
 #' @examples
-#' \dontrun{
-#' # Example of adding a gene panel set to an iSensor object
-#' new_panel_set <- list(panel1 = gene_data1, panel2 = gene_data2)
-#' iSensor_obj <- add_iSensor_panelSet(iSensor_obj, new_panel_set, setName = "CustomPanelSet")
-#' }
+#' # Create iSensor object
+#' iSensor_obj <- create_iSensor(data = matrix(rnorm(1000), nrow = 100))
 #' 
-#' @section Details:
-#' This function allows users to add a new set of gene panels to the iSensor object. 
-#' If a set name is not provided, a default name is generated based on the current number 
-#' of panel sets. The function ensures that the new panel set is properly integrated into 
-#' the existing structure of the iSensor object.
-#'
-#' @seealso
-#' \code{\link{iSensor_pipeline}}, \code{\link{add_iSensor_workPanel}}, 
-#' \code{\link{add_defaultPanels}}
+#' # Add a new panel set
+#' new_panels <- list(
+#'   "CellCycle" = c("CDK1", "CDK2", "CCNB1"),
+#'   "Apoptosis" = c("BAX", "BCL2", "CASP3")
+#' )
+#' iSensor_obj <- add_iSensor_panelSet(iSensor_obj, new_panels, setName = "MyPanels")
 #'
 #' @export
 add_iSensor_panelSet <- function(iSensor_obj, panelsSet, setName = NULL) {
@@ -436,80 +319,27 @@ add_iSensor_panelSet <- function(iSensor_obj, panelsSet, setName = NULL) {
     return(iSensor_obj)
 }
 
-#' Read Gene Panels from Files
+#' @title Add Random Gene Panels to iSensor Object
 #'
-#' Reads gene panel data from specified files in a directory and returns a list of data frames 
-#' containing gene information.
+#' @description 
+#' Generates and adds random gene panels to an iSensor object. Can optionally include
+#' a "majortrend" panel containing all genes. Each random panel samples genes without replacement.
 #'
-#' @param panelsDir Character string specifying the directory containing the gene panel files.
-#' @param panelsFiles Character vector of file names to be read from the specified directory.
-#' @param panelsNames Optional character vector of names to assign to the gene panels. 
-#'        If NULL, names will be derived from the file names. Default is NULL.
+#' @param iSensor_obj An iSensor object created by `create_iSensor`
+#' @param randNum Number of random panels to generate (must match length of `randSize`)
+#' @param randSize Vector specifying sizes for each random panel
+#' @param majortrend Logical indicating whether to include a panel with all genes (default: TRUE)
 #'
-#' @return A list of data frames, each containing a column of gene names corresponding to 
-#'         the specified panel files.
-#'
-#' @examples
-#' \dontrun{
-#' # Example of reading gene panels from a directory
-#' gene_panels <- read_genePanels("path/to/panels", c("panel1.txt", "panel2.txt"))
-#' }
-#' 
-#' @section Details:
-#' This function reads gene panel files from the specified directory, creating a data frame 
-#' for each file that contains the gene names. If panel names are provided, they will be used 
-#' as the names of the list elements; otherwise, names will be generated from the file names 
-#' by removing the ".txt" extension.
-#'
-#' @seealso
-#' \code{\link{add_defaultPanels}}, \code{\link{add_iSensor_panelSet}}, 
-#' \code{\link{set_iSensor_workPanel}}
-#'
-#' @export
-read_genePanels <- function(panelsDir, panelsFiles, panelsNames = NULL) {
-    iSensor_panel <- lapply(panelsFiles, function(x) {
-        readDir <- file.path(panelsDir, x)
-        readData <- data.frame(read.delim(readDir, header = FALSE)[,1])
-        colnames(readData) <- c('Genes')
-        # cat(x, 'was read', '\n')
-        return(readData)
-    })
-    if (!is.null(panelsNames)) {
-        names(iSensor_panel) <- panelsNames
-    } else {
-        names(iSensor_panel) <- sub("\\.txt$", "", panelsFiles)
-    }
-    return(iSensor_panel)
-}
-
-#' Add Random Gene Panels to iSensor Object
-#'
-#' Generates random gene panels based on the expression data in the iSensor object and 
-#' adds them to the specified iSensor object.
-#'
-#' @param iSensor_obj An iSensor object to which the random gene panels will be added.
-#' @param randNum Integer specifying the number of random panels to generate.
-#' @param randSize Numeric vector specifying the sizes of the random panels. The length 
-#'        of this vector must match `randNum`.
-#' @param majortrend Logical indicating whether to include a major trend panel based on 
-#'        all features. Default is TRUE.
-#'
-#' @return Updated iSensor object with new random gene panels included.
+#' @return The modified iSensor object with added random panels
 #'
 #' @examples
-#' \dontrun{
-#' # Example of adding random gene panels to an iSensor object
-#' iSensor_obj <- add_iSensor_random_panel(iSensor_obj, randNum = 3, randSize = c(100, 200, 300))
-#' }
+#' # Create iSensor object with 1000 genes
+#' iSensor_obj <- create_iSensor(data = matrix(rnorm(10000), nrow = 1000))
 #' 
-#' @section Details:
-#' This function checks if the expression data in the iSensor object is available. It then 
-#' generates random gene panels of specified sizes and adds them to the iSensor object. 
-#' A major trend panel, containing all features, is also included by default.
-#'
-#' @seealso
-#' \code{\link{iSensor_pipeline}}, \code{\link{add_iSensor_workPanel}}, 
-#' \code{\link{add_defaultPanels}}
+#' # Add 3 random panels of different sizes
+#' iSensor_obj <- add_iSensor_random_panel(iSensor_obj, 
+#'                                       randNum = 3,
+#'                                       randSize = c(50, 100, 200))
 #'
 #' @export
 add_iSensor_random_panel <- function(iSensor_obj, randNum, randSize, majortrend = TRUE) { 
@@ -538,42 +368,51 @@ add_iSensor_random_panel <- function(iSensor_obj, randNum, randSize, majortrend 
     return (iSensor_obj)
 }
 
-#' Calculate iSensor Signals for Gene Panels
+#' @title Calculate Panel Signals for iSensor Object
 #'
-#' Computes signaling activity scores for specified gene panels in the iSensor object, 
-#' using either mean or median transformations, with optional normalization.
+#' @description 
+#' Computes aggregated signals (mean/median) for each gene panel in an iSensor object.
+#' Supports normalization options and parallel processing for large datasets.
 #'
-#' @param iSensor_obj An iSensor object containing expression data and gene panels.
-#' @param panels Optional character vector of specific gene panel names to use. 
-#'        If NULL, all available panels will be used.
-#' @param transform Character string specifying the transformation method to use. 
-#'        Options are 'mean' or 'median'.
-#' @param normed Logical indicating whether to normalize the signals. Default is FALSE.
-#' @param normBy Character string specifying the normalization method. Options are 'cols' or 'rows'. 
-#'        Default is 'cols'.
-#' @param metaPanels Optional list defining meta-panels and their calculation rules.
-#' @param doParallel Logical indicating whether to use parallel processing. Default is FALSE.
-#' @param nCores Number of cores for parallel processing if doParallel=TRUE. Default is NULL 
-#'        (autodetect).
+#' @param iSensor_obj An iSensor object created by `create_iSensor`
+#' @param panels Character vector of panel names to analyze (NULL uses all panels)
+#' @param transform Aggregation method: 'mean' or 'median'
+#' @param normed Logical indicating whether to normalize signals (default: FALSE)
+#' @param normBy Normalization direction: 'cols' (by samples) or 'rows' (by genes)
+#' @param metaPanels List specifying meta-panels to create (see Details)
+#' @param doParallel Logical indicating whether to use parallel processing (default: FALSE)
+#' @param nCores Number of cores for parallel processing (NULL uses available-1)
 #'
-#' @return Updated iSensor object with calculated signals added to the Signals slot.
+#' @details
+#' The `metaPanels` parameter should be a named list where each element contains:
+#' \itemize{
+#'   \item `srcPanels`: Vector of source panel names
+#'   \item `rule`: Function to combine signals (e.g., `prod`, `sum`)
+#' }
+#'
+#' @return The modified iSensor object with computed signals stored in `Signals` slot
 #'
 #' @examples
 #' \dontrun{
-#' # Example of calculating signals for an iSensor object
-#' iSensor_obj <- iSensor_signal(iSensor_obj, panels = c("panel1", "panel2"), 
-#'                                transform = "mean", normed = TRUE)
-#' }
-#' 
-#' @section Details:
-#' This function checks if the expression data in the iSensor object is available. It then 
-#' computes the specified signal (mean or median) for each gene panel, with optional normalization 
-#' based on the specified method. The results are stored in the Signals slot of the iSensor object.
-#' If meta-panels are provided, they will be calculated based on the specified rules.
+#' # Calculate mean signals
+#' iSensor_obj <- iSensor_signal(iSensor_obj, transform = "mean")
 #'
-#' @seealso
-#' \code{\link{iSensor_pipeline}}, \code{\link{add_iSensor_workPanel}}, 
-#' \code{\link{add_defaultPanels}}, \code{\link{add_iSensor_random_panel}}
+#' # Calculate normalized median signals with parallel processing
+#' iSensor_obj <- iSensor_signal(iSensor_obj, 
+#'                              transform = "median",
+#'                              normed = TRUE,
+#'                              doParallel = TRUE)
+#'
+#' # With custom meta-panel
+#' iSensor_obj <- iSensor_signal(iSensor_obj,
+#'                              transform = "mean",
+#'                              metaPanels = list(
+#'                                "MyMeta" = list(
+#'                                  srcPanels = c("Panel1", "Panel2"),
+#'                                  rule = prod
+#'                                )
+#'                              ))
+#' }
 #'
 #' @export
 iSensor_signal <- function(iSensor_obj, panels = NULL, transform, normed = FALSE, normBy = 'cols',
@@ -592,8 +431,8 @@ iSensor_signal <- function(iSensor_obj, panels = NULL, transform, normed = FALSE
     iSensor_mean_median <- function(expression_data, detectors, method, norm = normed, normOpt = normBy) {
         
         # отбираем строки в полной матрице с ненулевой дисперсией
-        non_zero_variance_rows <- apply(expression_data, 1, var) > 0
-        expression_data <- expression_data[non_zero_variance_rows, , drop = FALSE] 
+        # non_zero_variance_rows <- apply(expression_data, 1, var) > 0
+        # expression_data <- expression_data[non_zero_variance_rows, , drop = FALSE]
         
         if (normed) {
             if (method == "mean") {
@@ -639,6 +478,11 @@ iSensor_signal <- function(iSensor_obj, panels = NULL, transform, normed = FALSE
     }
 
     if (transform == 'mean' || transform == 'median') {
+        if(is.null(iSensor_obj$metaData)) {
+            non_zero_variance_rows <- apply(iSensor_obj$exprData, 1, var) > 0
+            iSensor_obj$exprData <- iSensor_obj$exprData[non_zero_variance_rows, , drop = FALSE]
+            iSensor_obj$metaData <- 'obtained'
+        }
         # panelsNames <- names(iSensor_obj$genePanels) # delete ?
         if (doParallel) {
             library(future.apply)
@@ -707,4 +551,134 @@ iSensor_signal <- function(iSensor_obj, panels = NULL, transform, normed = FALSE
     cat(transform_name, 'signal was calculated\n')
 
     return(iSensor_obj)
+}
+
+#' @title Add Default Gene Panels to iSensor Object
+#'
+#' @description 
+#' Loads and adds pre-defined gene panels to an iSensor object based on specified
+#' biological filters (species, hormone, tissue type). Panels are stored in RDA format.
+#'
+#' @param iSensor_obj An iSensor object created by `create_iSensor`
+#' @param species Optional species filter (e.g., "AT")
+#' @param hormone Optional hormone type filter (e.g., "aux", "cyt")
+#' @param type Optional type filter (e.g., "cis", "trans")
+#' @param format File format for panels ("rda" or "txt", default: "rda")
+#'
+#' @return The modified iSensor object with default panels added to `genePanelSets`
+#'
+#' @examples
+#' \dontrun{
+#' # Add all default panels
+#' iSensor_obj <- add_defaultPanels(iSensor_obj)
+#'
+#' # Add species-specific panels
+#' iSensor_obj <- add_defaultPanels(iSensor_obj, species = "AT")
+#'
+#' # Add filtered panels
+#' iSensor_obj <- add_defaultPanels(iSensor_obj, 
+#'                                species = "AT",
+#'                                hormone = "aux",
+#'                                type = "trans")
+#' }
+#'
+#' @seealso \code{\link{read_genePanels}} for panel loading implementation
+#' @export
+add_defaultPanels <- function(iSensor_obj, species = NULL, hormone = NULL, type = NULL, format = 'rda') {
+    panelSet_name_gen <- function() {
+        speciesName <- if(is.null(species)) 'allSpec' else species
+        hormoneName <- if(is.null(hormone)) 'allHorm' else hormone
+        typeName <- if(is.null(type)) 'allType' else type
+        name <- paste0(c(speciesName, hormoneName, typeName), collapse='_')
+        return(name)
+    }
+    
+    panelsDir <- system.file("extdata/geneSensors", package = "iSensor")
+    # panelsDir <- 'geneSensors/panels_rda/'
+
+    panelsList <- read_genePanels(panelsDir = panelsDir,
+                                  species = species, hormone = hormone, type = type,
+                                  format = format)
+    iSensor_obj <- add_iSensor_panelSet(iSensor_obj, panelsSet = panelsList, setName = panelSet_name_gen())
+
+    return(iSensor_obj)
+}
+
+#' @title Load Gene Panel Files
+#' 
+#' @description 
+#' Reads gene panel files from a directory and filters them based on biological criteria
+#' (species, hormone, type). Supports both RDA and TXT file formats.
+#'
+#' @param panelsDir Directory containing panel files
+#' @param species Optional species filter (e.g., "AT")
+#' @param hormone Optional hormone type filter (e.g., "aux", "cyt")
+#' @param type Optional type filter (e.g., "cis", "trans")
+#' @param panelsFiles Optional vector of specific files to read (NULL reads all matching files)
+#' @param format File format ("rda" or "txt", default: "rda")
+#'
+#' @return A named list of gene panels, where each element is a data frame with a "Genes" column
+#'
+#' @examples
+#' \dontrun{
+#' # Read all RDA panels
+#' panels <- read_genePanels("path/to/panels")
+#'
+#' # Read filtered panels
+#' panels <- read_genePanels("path/to/panels",
+#'                          species = "AT",
+#'                          hormone = "aux")
+#' }
+#'
+#' @export
+read_genePanels <- function(panelsDir, species = NULL, hormone = NULL, type = NULL, panelsFiles = NULL, format = 'rda') {
+    
+    if (is.null(panelsFiles)) {
+        panelsFiles <- list.files(path = panelsDir, pattern = paste0("*", format), full.names = FALSE)
+    }
+    panelFilesToGet <- sapply(strsplit(panelsFiles, '_'), function(x) {
+        sceckSpecies <- if(is.null(species)) TRUE else any(species %in% x)
+        checkHormone <- if(is.null(hormone)) TRUE else any(hormone %in% x)
+        checkType <- if(is.null(type)) TRUE else any(type %in% x)
+            
+        return (all(sceckSpecies, checkHormone, checkType))
+        })
+    panelsFiles <- panelsFiles[panelFilesToGet]
+    
+    if (format == 'rda') {
+        # cat('Format: ', format, '\n')
+        panelEnv <- new.env()
+        for (panelFile in panelsFiles) {
+            tmpDir <- file.path(panelsDir, panelFile)
+            load(tmpDir, envir = panelEnv)
+        }
+        panelsNames <- ls(envir = panelEnv)
+        # cat('Panels: ', panelsNames, '\n')
+        panelsList <- lapply(panelsNames, function(x) {
+            tmpPanel <- get(x, envir = panelEnv)[['genes']]
+            # cat('Panel current:', x, '\n')
+            # cat('Panel current length: ', length(tmpPanel),'\n')
+            tmpPanel <- data.frame(tmpPanel)
+            colnames(tmpPanel) <- c('Genes')
+            # cat('Panel info: ', dim(tmpPanel), '\n')
+            return (tmpPanel)
+        })
+        names(panelsList) <- panelsNames
+        # cat('Panels list info:', class(panelsList), length(panelsList), '\n')
+        rm(panelEnv)
+        return(panelsList)
+    }
+    
+    if (format == 'txt') {
+        panelsList <- lapply(panelsFiles, function(x) {
+            readDir <- file.path(panelsDir, x)
+            readData <- data.frame(read.delim(readDir, header = FALSE)[,1])
+            colnames(readData) <- c('Genes')
+            # cat(x, 'was read', '\n')
+            return(readData)
+        })
+        names(panelsList) <- sub("\\.txt$", "", panelsFiles)
+
+        return(panelsList)
+    }
 }

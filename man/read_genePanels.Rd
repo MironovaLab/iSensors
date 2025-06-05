@@ -2,42 +2,46 @@
 % Please edit documentation in R/iSensor.R
 \name{read_genePanels}
 \alias{read_genePanels}
-\title{Read Gene Panels from Files}
+\title{Load Gene Panel Files}
 \usage{
-read_genePanels(panelsDir, panelsFiles, panelsNames = NULL)
+read_genePanels(
+  panelsDir,
+  species = NULL,
+  hormone = NULL,
+  type = NULL,
+  panelsFiles = NULL,
+  format = "rda"
+)
 }
 \arguments{
-\item{panelsDir}{Character string specifying the directory containing the gene panel files.}
+\item{panelsDir}{Directory containing panel files}
 
-\item{panelsFiles}{Character vector of file names to be read from the specified directory.}
+\item{species}{Optional species filter (e.g., "AT")}
 
-\item{panelsNames}{Optional character vector of names to assign to the gene panels. 
-If NULL, names will be derived from the file names. Default is NULL.}
+\item{hormone}{Optional hormone type filter (e.g., "aux", "cyt")}
+
+\item{type}{Optional type filter (e.g., "cis", "trans")}
+
+\item{panelsFiles}{Optional vector of specific files to read (NULL reads all matching files)}
+
+\item{format}{File format ("rda" or "txt", default: "rda")}
 }
 \value{
-A list of data frames, each containing a column of gene names corresponding to 
-        the specified panel files.
+A named list of gene panels, where each element is a data frame with a "Genes" column
 }
 \description{
-Reads gene panel data from specified files in a directory and returns a list of data frames 
-containing gene information.
+Reads gene panel files from a directory and filters them based on biological criteria
+(species, hormone, type). Supports both RDA and TXT file formats.
 }
-\section{Details}{
-
-This function reads gene panel files from the specified directory, creating a data frame 
-for each file that contains the gene names. If panel names are provided, they will be used 
-as the names of the list elements; otherwise, names will be generated from the file names 
-by removing the ".txt" extension.
-}
-
 \examples{
 \dontrun{
-# Example of reading gene panels from a directory
-gene_panels <- read_genePanels("path/to/panels", c("panel1.txt", "panel2.txt"))
+# Read all RDA panels
+panels <- read_genePanels("path/to/panels")
+
+# Read filtered panels
+panels <- read_genePanels("path/to/panels",
+                         species = "AT",
+                         hormone = "aux")
 }
 
-}
-\seealso{
-\code{\link{add_defaultPanels}}, \code{\link{add_iSensor_panelSet}}, 
-\code{\link{set_iSensor_workPanel}}
 }

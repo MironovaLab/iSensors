@@ -4,33 +4,48 @@
 \alias{add_defaultPanels}
 \title{Add Default Gene Panels to iSensor Object}
 \usage{
-add_defaultPanels(iSensor_obj)
+add_defaultPanels(
+  iSensor_obj,
+  species = NULL,
+  hormone = NULL,
+  type = NULL,
+  format = "rda"
+)
 }
 \arguments{
-\item{iSensor_obj}{An iSensor object to which the default gene panels will be added.}
+\item{iSensor_obj}{An iSensor object created by `create_iSensor`}
+
+\item{species}{Optional species filter (e.g., "AT")}
+
+\item{hormone}{Optional hormone type filter (e.g., "aux", "cyt")}
+
+\item{type}{Optional type filter (e.g., "cis", "trans")}
+
+\item{format}{File format for panels ("rda" or "txt", default: "rda")}
 }
 \value{
-Updated iSensor object with default gene panels included.
+The modified iSensor object with default panels added to `genePanelSets`
 }
 \description{
-Loads default gene panels from the package's extdata directory and adds them 
-to the specified iSensor object.
+Loads and adds pre-defined gene panels to an iSensor object based on specified
+biological filters (species, hormone, tissue type). Panels are stored in RDA format.
 }
-\section{Details}{
-
-This function retrieves gene panel directories from the package's extdata folder, 
-reads the panel files, and adds them to the iSensor object as new panel sets. 
-Each folder in the directory corresponds to a different hormone panel.
-}
-
 \examples{
 \dontrun{
-# Example of adding default panels to an iSensor object
+# Add all default panels
 iSensor_obj <- add_defaultPanels(iSensor_obj)
+
+# Add species-specific panels
+iSensor_obj <- add_defaultPanels(iSensor_obj, species = "AT")
+
+# Add filtered panels
+iSensor_obj <- add_defaultPanels(iSensor_obj, 
+                               species = "AT",
+                               hormone = "aux",
+                               type = "trans")
 }
 
 }
 \seealso{
-\code{\link{iSensor_pipeline}}, \code{\link{set_iSensor_workPanel}}, 
-\code{\link{add_iSensor_panelSet}}, \code{\link{read_genePanels}}
+\code{\link{read_genePanels}} for panel loading implementation
 }

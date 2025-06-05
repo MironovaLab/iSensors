@@ -1,3 +1,4 @@
 ^geneSensors/
 ^README\.Rmd$
 ^README\.html$
+^.*\.ipynb$

@@ -2,13 +2,17 @@
 % Please edit documentation in R/iSensor.R
 \name{iSensor_pipeline}
 \alias{iSensor_pipeline}
-\title{Execute iSensor Analysis Pipeline on Seurat Object}
+\title{iSensor Analysis Pipeline for Seurat Objects}
 \usage{
 iSensor_pipeline(
   seuratObject,
-  presetPanels = "Auxin",
+  species = NULL,
+  hormone = NULL,
+  type = NULL,
   signals = c("mean_normed"),
   seurLayer = "data",
+  usePanelPreset = NULL,
+  presetPanelName = NULL,
   randPanels = 2,
   randSize = c(200, 500),
   majortrend = TRUE,
@@ -16,106 +20,85 @@ iSensor_pipeline(
   defaultAssay = NULL,
   useParallel = FALSE,
   nCores = NULL,
-  metaPanels = list(R2D2 = list(srcPanels = c("AT_aux_trans_A-ARF", "AT_aux_trans_IAA"),
+  metaPanels = list(R2D2 = list(srcPanels = c("AT_aux_trans_A_ARF", "AT_aux_trans_IAA"),
     rule = prod))
 )
 }
 \arguments{
-\item{seuratObject}{A Seurat object containing single-cell expression data}
+\item{seuratObject}{A Seurat object (v3+) containing single-cell data}
 
-\item{presetPanels}{Character vector specifying which predefined gene panels to use.
-Default is 'Auxin'. Multiple panels can be specified (e.g., c('Auxin', 'Cytokinin'))}
+\item{species}{Species for default panels ("AT", etc.)}
 
-\item{signals}{Character vector of signal calculation methods to apply. Options include:
-\itemize{
-  \item 'mean' - Simple mean expression
-  \item 'mean_normed' - Mean expression with normalization (default)
-  \item 'median' - Median expression
-  \item 'median_normed' - Median expression with normalization
-}}
+\item{hormone}{Hormone type for panel filtering (optional)}
 
-\item{seurLayer}{Character specifying which Seurat assay layer to use ('data', 'counts', or 'scale.data').
-Default is "data"}
+\item{type}{Panel type for panel filtering (optional)}
 
-\item{randPanels}{Integer specifying number of random gene panels to generate for background comparison.
-Default is 2}
+\item{signals}{Vector of signals to compute: 'mean', 'mean_normed',
+'median', 'median_normed' (default: 'mean_normed')}
 
-\item{randSize}{Integer vector of length 2 specifying size range (min,max) for random panels.
-Default is c(200, 500)}
+\item{seurLayer}{Seurat assay layer to use ("data", "counts", etc.)}
 
-\item{majortrend}{Logical indicating whether to maintain major expression trends in random panels.
-Default is TRUE}
+\item{usePanelPreset}{Custom panel set to add (overrides species/hormone/type)}
 
-\item{usePanels}{Optional character vector of specific panel names to analyze. If NULL, uses all available panels.
-Default is NULL}
+\item{presetPanelName}{Name for custom panel set (required if usePanelPreset specified)}
 
-\item{defaultAssay}{Character specifying which iSensor assay to set as default in output Seurat object.
-If NULL, keeps current default assay. Default is NULL}
+\item{randPanels}{Number of random panels to generate (default: 2)}
 
-\item{useParallel}{Logical indicating whether to use parallel processing. Default is FALSE}
+\item{randSize}{Size range for random panels (default: c(200, 500))}
 
-\item{nCores}{Integer specifying number of cores for parallel processing if useParallel=TRUE.
-If NULL, uses available cores - 1. Default is NULL}
+\item{majortrend}{Whether to include all genes as "majortrend" panel (default: TRUE)}
 
-\item{metaPanels}{List defining composite meta-panels and their calculation rules. Each element should be:
-\itemize{
-  \item A list with 'srcPanels' (character vector of source panels)
-  \item 'rule' (function to combine panels, e.g., prod for product)
-}
-Default example combines two auxin panels using product}
+\item{usePanels}{Specific panels to analyze (NULL uses all available)}
+
+\item{defaultAssay}{Name of iSensor assay to set as default (optional)}
+
+\item{useParallel}{Enable parallel processing (default: FALSE)}
+
+\item{nCores}{Number of cores for parallel processing (NULL uses available-1)}
+
+\item{metaPanels}{List of meta-panels to create (see Details)}
 }
 \value{
-Modified Seurat object with new assays containing iSensor signaling activity scores.
-        Each assay is named as 'iSensor_[signal_type]' (e.g., 'iSensor_mean_normed')
+Modified Seurat object with new assays:
+\itemize{
+  \item Each signal type becomes separate assay (names: 'iSensor_[signal]')
+  \item Original data remains unchanged
+  \item Meta-panels included if specified
+}
 }
 \description{
-Performs comprehensive gene panel analysis of single-cell RNA-seq data stored in a Seurat object,
-calculating signaling activity scores for specified gene panels and storing results as new assays.
+Main pipeline for analyzing single-cell RNA-seq data using iSensor framework.
+Computes gene panel signatures and stores results as new assays in Seurat object.
+Supports parallel processing, custom panels, and meta-panel creation.
 }
-\section{Analysis Workflow}{
-
-The pipeline performs these key steps:
-\enumerate{
-  \item Extracts expression matrix from Seurat object
-  \item Initializes iSensor analysis object
-  \item Loads specified gene panels
-  \item Generates random background panels (if enabled)
-  \item Calculates all requested signal types
-  \item Stores results as new assays in Seurat object
+\details{
+Meta-panels should be specified as named lists with:
+\itemize{
+  \item \code{srcPanels}: Vector of source panel names
+  \item \code{rule}: Combination function (e.g., \code{prod}, \code{sum})
 }
 }
-
-\section{Technical Details}{
-
-Signal calculation methods:
-\describe{
-  \item{mean/median}{Simple average or median expression of panel genes}
-  \item{*_normed}{Normalized by background (random panels or specified method)}
-}
-}
-
 \examples{
 \dontrun{
-# Basic analysis with defaults
+# Basic analysis with default parameters
 seurat_obj <- iSensor_pipeline(seurat_obj)
 
-# Advanced analysis with multiple panels and signals
+# Advanced analysis with custom settings
 seurat_obj <- iSensor_pipeline(
-    seurat_obj,
-    presetPanels = c('Auxin', 'Cytokinin'),
-    signals = c('mean_normed', 'median')
-    metaPanels = list(
-        'MyMeta' = list(
-            srcPanels = c('Panel1', 'Panel2'),
-            rule = mean
-        )
+  seurat_obj,
+  species = "human",
+  signals = c("mean", "median_normed"),
+  randPanels = 3,
+  metaPanels = list(
+    "MyMeta" = list(
+      srcPanels = c("Panel1", "Panel2"),
+      rule = function(x) sqrt(mean(x))
     )
+  )
 )
 }
 
 }
 \seealso{
-\code{\link{create_iSensor}} for object initialization,
-\code{\link{iSensor_signal}} for signal calculation details,
-\code{\link{set_iSensor_workPanel}} for panel management
+\code{\link{create_iSensor}}, \code{\link{iSensor_signal}}
 }
