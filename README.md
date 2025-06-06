@@ -14,9 +14,9 @@ install.packages("devtools")
 devtools::install_github("MironovaLab/iSensors")
 ```
 In case dealing with a mistake like:
-```
+***
 Failed to install 'unknown package' from GitHub
-```
+***
 You need to go to GitHub Settings -> Developer Settings and generate your token.
 Run
 ```
