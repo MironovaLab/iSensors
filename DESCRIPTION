@@ -1,7 +1,7 @@
-Package: iSensor
+Package: iSensors
 Type: Package
 Title: A Package for Single-Cell Gene Panel Analysis
-Version: 1.1.1
+Version: 1.1.2
 Author: c(
     person("Maxim", "Rybakov", email = "m.al.rybakov@gmail.com", role = c("aut", "cre")),
     person("Elena", "Zemlyanskaya", email = "ezemlyanskaya@gmail.com", role = "aut"),
