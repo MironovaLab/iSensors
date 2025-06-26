@@ -592,7 +592,7 @@ add_defaultPanels <- function(iSensor_obj, species = NULL, hormone = NULL, type 
         return(name)
     }
     
-    panelsDir <- system.file("extdata/geneSensors", package = "iSensor")
+    panelsDir <- system.file("extdata/geneSensors", package = "iSensors")
     # panelsDir <- 'geneSensors/panels_rda/'
 
     panelsList <- read_genePanels(panelsDir = panelsDir,
