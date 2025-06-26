@@ -26,7 +26,7 @@ and copy your token to the GITHUB_PAT= your token/
 
 ## Running iSensors via default panels
 ```R
-library(iSensor)
+library(iSensors)
 library(Seurat)
 in_path <- "D://FILES/work/Sensor/ISensors_data/Auxin_transcriptoms/"
 seurat_obj <- readRDS(paste0(in_path, "seurat_auxin_5bulkRNA-Seq.rds"))
