@@ -20,7 +20,8 @@ iSensor_pipeline(
   defaultAssay = NULL,
   useParallel = FALSE,
   nCores = NULL,
-  metaPanels = NULL
+  metaPanels = list(R2D2 = list(srcPanels = c("AT_aux_trans_A_ARF", "AT_aux_trans_IAA"),
+    rule = prod))
 )
 }
 \arguments{

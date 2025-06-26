@@ -67,7 +67,8 @@ iSensor_pipeline <- function(seuratObject, species = NULL, hormone = NULL, type 
                              usePanelPreset = NULL, presetPanelName = NULL,
                              randPanels = 2, randSize = c(200, 500), majortrend = TRUE,
                              usePanels = NULL, defaultAssay = NULL, useParallel = FALSE, nCores = NULL,
-                             metaPanels = NULL) {
+                             metaPanels = list('R2D2' = list('srcPanels' = c('AT_aux_trans_A_ARF', 'AT_aux_trans_IAA'),
+                                                             'rule' = prod))) {
     if (class(seuratObject) != 'Seurat') {
         stop("Error: function must be applied to Seurat object")
     }
