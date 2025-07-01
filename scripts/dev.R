@@ -34,14 +34,15 @@ testPanel <- load_sensors(setName = 'testPanelSet', customPanels = TRUE,
 is.vector(testPanel[['panels']][['AT_aux_cistrans_IR8_ARF5syn_down']])
 str(testPanel)
 
-testPanel <- load_sensors(setName = 'testPanelSet', customPanels = TRUE,
+testPanel <- load_sensors(setName = 'testPanelSet', species = 'AT', hormone = 'cyt', customPanels = TRUE,
                           randomInfo = list('n' = 3, 'sizes' = c(100, 200, 300), majortrend = TRUE),
                           metaPanels = list(
                             'meta1' = list('srcPanels' = c("AT_aux_cis_DR5_ARF1", "AT_aux_cistrans_DR5_ARF5_2_up"), rule = mean),
                             'meta2' = list('srcPanels' = c("AT_aux_cis_DR5_ARF1", "AT_aux_cistrans_DR5_ARF5_2_up"), rule = prod))
                           )
+View(testPanel)
 testSens <- create_iSensors(data = testMatr, panelSet = testPanel)
 str(testSens)
 testSens <- iSensor_signal(iSensor_obj = testSens, transform = 'mean', normed = TRUE)
 testSens <- iSensor_signal(iSensor_obj = testSens, transform = 'median', normed = FALSE)
-View(testSens$signals$mean_normed)
+View(testSens$signals)

@@ -90,7 +90,7 @@ check_random_info <- function(randomInfo) {
   return(TRUE)
 }
 
-check_metaPanels <- function(metaPanels, available_panels) {
+check_metaPanels <- function(metaPanels) {
   if (!is.list(metaPanels)) {
     stop("metaPanels must be a list")
   }
@@ -115,10 +115,10 @@ check_metaPanels <- function(metaPanels, available_panels) {
       stop(paste0("'srcPanels' must be a character vector in meta panel: ", panel_name))
     }
     
-    invalid_names <- setdiff(panel$srcPanels, available_panels)
-    if (length(invalid_names) > 0) {
-      stop(paste0("metaPanel '", panel_name, "' references unknown panels: ", paste(invalid_names, collapse = ", ")))
-    }
+    # invalid_names <- setdiff(panel$srcPanels, available_panels)
+    # if (length(invalid_names) > 0) {
+    #   stop(paste0("metaPanel '", panel_name, "' references unknown panels: ", paste(invalid_names, collapse = ", ")))
+    # }
     
     # Проверка rule — это функция
     if (!is.function(panel$rule)) {
