@@ -14,3 +14,9 @@ b <- list(hormone = "estrogen")
 
 combined <- c(a, b)
 combined
+
+my_function <- function(method = c("mean", "median")) {
+  method <- match.arg(method)
+  print(paste("Selected method:", method))
+}
+my_function(c('mean', 'median'))

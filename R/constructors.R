@@ -10,14 +10,13 @@ create_iSensors <- function(data = NULL, panelSet = NULL, labels = NULL) {
                       'metaData' = NULL)
   class(iSensor_obj) <- 'iSensors'
   
-  # iSensor_obj <- add_defaultPanels(iSensor_obj, species = species, hormone = hormone, type = type, format = 'rda')
-  
   return(iSensor_obj)
 }
 
-create_iSensorsPanelSet <- function(name, panelsList) {
+create_iSensorsPanelSet <- function(name, panelsList, additional = NULL) {
   iSensorsPanelSet_obj <- list('panelSetName' = name,
-                               'panels' = panelsList)
+                               'panels' = panelsList,
+                               'additional' = additional)
   class(iSensorsPanelSet_obj) <- 'iSensorsPanelSet'
   
   check_iSensorsPanelSet_obj(iSensorsPanelSet_obj)

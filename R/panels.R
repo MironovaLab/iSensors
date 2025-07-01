@@ -126,13 +126,15 @@ filter_and_load_panels <- function(panelsDir, species = NULL, hormone = NULL, ty
     panelsFiles <- panelsFiles[panelFilesToGet]
   }
   
-  panel_objs <- load_all_panels_from_dir(panelsDir = panelsDir, files = panelsFiles)
+  panel_objs <- load_panel_files(panelsDir = panelsDir, files = panelsFiles)
   panel_names <- sapply(panel_objs, function(p) p$name)
   panelsList <- setNames(lapply(panel_objs, function(p) p$genes), panel_names)
   return(panelsList)
 }
 
-load_sensors <- function(species = NULL, hormone = NULL, type = NULL, defaultPanels = TRUE, customPanels = FALSE) {
+load_sensors <- function(setName, species = NULL, hormone = NULL, type = NULL,
+                         defaultPanels = TRUE, customPanels = FALSE,
+                         random = TRUE, randomInfo = NULL, metaPanels = NULL) {
   resultList <- list()
   if (defaultPanels) {
     defaultDir <- system.file("extdata/geneSensors", package = "iSensors")
@@ -142,12 +144,33 @@ load_sensors <- function(species = NULL, hormone = NULL, type = NULL, defaultPan
   if (customPanels) {
     customDir <- 'iSensors/'
     customDir_path <- file.path(getwd(), customDir)
-    if (!dir.exists(customDir_path)) {
-      massage('No "iSensors" folder is provided it the working directory, no custom panels will be used')
-      return(resultList)
+    if (dir.exists(customDir_path)) {
+      customPanelsList <- load_panels_from_dir(customDir_path, filter = FALSE)
+      resultList <- c(resultList, customPanelsList)
+    } else {
+      message('No "iSensors" folder is found in the working directory, no custom panels will be used')
     }
-    customPanelsList <- load_panels_from_dir(customDir, filter = FALSE)
-    resultList <- c(resultList, customPanelsList)
   }
-  return(resultList)
+  
+  # Создание additional
+  additional <- list()
+  
+  if (isTRUE(random)) {
+    # Пользователь запросил рандомы по умолчанию
+    additional$random <- list(n = 2, sizes = c(200, 500), majortrend = TRUE)
+  }
+  
+  if (!is.null(randomInfo)) {
+    # Пользователь указал собственные настройки
+    check_random_info(randomInfo)
+    additional$random <- randomInfo
+  }
+  
+  if (!is.null(metaPanels)) {
+    # check_metaPanels(metaPanels)
+    additional$meta <- metaPanels
+  }
+  
+  panelSet <- create_iSensorsPanelSet(name = setName, panelsList = resultList, additional = additional)
+  return(panelSet)
 }
