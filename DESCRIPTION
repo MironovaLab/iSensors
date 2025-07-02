@@ -1,12 +1,14 @@
 Package: iSensors
 Type: Package
-Title: A Package for Single-Cell Gene Panel Analysis
+Title: Single-Cell Gene Panel Analysis Package
 Version: 1.2.0
-Author: c(
-    person("Maxim", "Rybakov", email = "m.al.rybakov@gmail.com", role = c("aut", "cre")),
-    person("Elena", "Zemlyanskaya", email = "ezemlyanskaya@gmail.com", role = "aut"),
-    person("Victoria", "Mironova", email = "victoria.mironova@ru.nl", role = "aut"),
-    person("Vladislav", "Dolgikh", email = "volleydollmc1@gmail.com", role = "aut"))
+Authors@R: 
+    c(
+      person("Maxim", "Rybakov", email = "m.al.rybakov@gmail.com", role = c("aut", "cre")),
+      person("Elena", "Zemlyanskaya", email = "ezemlyanskaya@gmail.com", role = "aut"),
+      person("Victoria", "Mironova", email = "victoria.mironova@ru.nl", role = "aut"),
+      person("Vladislav", "Dolgikh", email = "volleydollmc1@gmail.com", role = "aut")
+    )
 Maintainer: Maxim Rybakov <m.al.rybakov@gmail.com>
 Description: The iSensors package provides tools for analyzing single-cell gene expression data 
     using predefined and custom gene panels. It allows users to compute signaling activity 
@@ -14,11 +16,10 @@ Description: The iSensors package provides tools for analyzing single-cell gene 
 License: MIT
 Imports: 
     Seurat,
-    future,
-    future.apply,
     stats,
     methods,
-    utils
+    utils,
+    Matrix
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3

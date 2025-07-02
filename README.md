@@ -10,8 +10,10 @@ You can install the package from GitHub using `devtools`:
 # Make sure you have devtools installed
 install.packages("devtools")
 
-# Install the iSensor package
+# Install the iSensor package from main
 devtools::install_github("MironovaLab/iSensors")
+# or from other branch
+devtools::install_github("MironovaLab/iSensors", ref = "iSensors-v1.2.0-dev")
 ```
 In case dealing with a mistake like:
 ```
@@ -23,14 +25,3 @@ Run
 usethis::edit_r_environ()
 ```
 and copy your token to the GITHUB_PAT= your token/
-
-## Running iSensors via default panels
-```R
-library(iSensors)
-library(Seurat)
-in_path <- "D://FILES/work/Sensor/ISensors_data/Auxin_transcriptoms/"
-seurat_obj <- readRDS(paste0(in_path, "seurat_auxin_5bulkRNA-Seq.rds"))
-seurat_obj <- iSensor_pipeline(seuratObject=seurat_obj, species = 'AT', hormone = 'aux', type = c('cis','trans'))
-print(names(seurat_obj@assays))
-seurat_obj@assays$iSensor_mean_normed@counts[1:10, 1:3]
-```

@@ -1,3 +1,4 @@
+#' @keywords internal
 check_iSensorsPanel_obj <- function(panel_obj) {
   
   if (!('genes' %in% names(panel_obj))) {
@@ -12,6 +13,7 @@ check_iSensorsPanel_obj <- function(panel_obj) {
   return(TRUE)
 }
 
+#' @keywords internal
 check_iSensors_obj <- function(iSensor_obj, check_exprData = FALSE, check_panelSet = FALSE,
                                check_signals = FALSE, check_sampleLabels = FALSE) {
   # Проверка класса
@@ -32,6 +34,7 @@ check_iSensors_obj <- function(iSensor_obj, check_exprData = FALSE, check_panelS
   return(TRUE)
 }
 
+#' @keywords internal
 check_iSensors_panel <- function(panel, print_massage = FALSE) {
   if (!is.vector(panel)) {
     if (print_massage) {
@@ -43,6 +46,7 @@ check_iSensors_panel <- function(panel, print_massage = FALSE) {
   return(TRUE)
 }
 
+#' @keywords internal
 check_iSensorsPanelSet_obj <- function(iSensorsPanelSet_obj) {
   
   if (!is.character(iSensorsPanelSet_obj$panelSetName)) {
@@ -63,6 +67,7 @@ check_iSensorsPanelSet_obj <- function(iSensorsPanelSet_obj) {
   return(TRUE)
 }
 
+#' @keywords internal
 check_random_info <- function(randomInfo) {
   if (!is.list(randomInfo)) {
     stop("`randomInfo` must be a list.")
@@ -90,6 +95,7 @@ check_random_info <- function(randomInfo) {
   return(TRUE)
 }
 
+#' @keywords internal
 check_metaPanels <- function(metaPanels) {
   if (!is.list(metaPanels)) {
     stop("metaPanels must be a list")

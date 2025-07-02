@@ -1,8 +1,9 @@
 devtools::load_all()
 library(Seurat)
 exists('check_iSensorsPanelSet_obj')
+help(LoadSensors)
 
-testData <- readRDS('data/testSeurData.rds')
+testData <- readRDS('testData/testSeurData.rds')
 testMatr <- GetAssayData(object = testData, assay = "RNA", layer = "counts")
 testMatr
 
@@ -34,7 +35,7 @@ testPanel <- load_sensors(setName = 'testPanelSet', customPanels = TRUE,
 is.vector(testPanel[['panels']][['AT_aux_cistrans_IR8_ARF5syn_down']])
 str(testPanel)
 
-testPanel <- load_sensors(setName = 'testPanelSet', species = 'AT', hormone = 'cyt', customPanels = TRUE,
+testPanel <- LoadSensors(setName = 'testPanelSet', species = 'AT', hormone = 'cyt', customPanels = TRUE,
                           randomInfo = list('n' = 3, 'sizes' = c(100, 200, 300), majortrend = TRUE),
                           metaPanels = list(
                             'meta1' = list('srcPanels' = c("AT_aux_cis_DR5_ARF1", "AT_aux_cistrans_DR5_ARF5_2_up"), rule = mean),
@@ -45,4 +46,15 @@ testSens <- create_iSensors(data = testMatr, panelSet = testPanel)
 str(testSens)
 testSens <- iSensor_signal(iSensor_obj = testSens, transform = 'mean', normed = TRUE)
 testSens <- iSensor_signal(iSensor_obj = testSens, transform = 'median', normed = FALSE)
-View(testSens$signals)
+View(testSens$signals$mean_normed)
+
+result <- CalcSensors(testData,
+                      seurLayer = "data",
+                      panelSet = testPanel,
+                      signals = c("mean_normed", "median"))
+result <- CalcSensors(testMatr,
+                      panelSet = testPanel,
+                      signals = c("mean_normed", "median"))
+View(result)
+slotNames(result)
+View(result@assays$iSensors_median$counts)

@@ -1,6 +1,12 @@
-^geneSensors/
 ^README\.Rmd$
 ^README\.html$
 ^.*\.ipynb$
 ^.*\.Rproj$
-^\.Rproj\.user$
+
+^data/
+^scripts/
+^.*\.Rhistory$
+^.*\.RData$
+^\.Ruserdata$
+^\.gitignore$
+^\.gitattributes$

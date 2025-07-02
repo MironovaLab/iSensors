@@ -1,123 +1,98 @@
-#' @title iSensor Analysis Pipeline for Seurat Objects
+#' Calculate Sensor Signals from Expression Data
 #'
-#' @description 
-#' Main pipeline for analyzing single-cell RNA-seq data using iSensor framework.
-#' Computes gene panel signatures and stores results as new assays in Seurat object.
-#' Supports parallel processing, custom panels, and meta-panel creation.
+#' Computes sensor signals based on predefined gene panels from expression data.
+#' Supports input as Seurat objects or raw expression matrices, and calculates multiple
+#' summary signals including mean, median, and their normalized versions.
 #'
-#' @param seuratObject A Seurat object (v3+) containing single-cell data
-#' @param species Species for default panels ("AT", etc.)
-#' @param hormone Hormone type for panel filtering (optional)
-#' @param type Panel type for panel filtering (optional)
-#' @param signals Vector of signals to compute: 'mean', 'mean_normed',
-#'        'median', 'median_normed' (default: 'mean_normed')
-#' @param seurLayer Seurat assay layer to use ("data", "counts", etc.)
-#' @param usePanelPreset Custom panel set to add (overrides species/hormone/type)
-#' @param presetPanelName Name for custom panel set (required if usePanelPreset specified)
-#' @param randPanels Number of random panels to generate (default: 2)
-#' @param randSize Size range for random panels (default: c(200, 500))
-#' @param majortrend Whether to include all genes as "majortrend" panel (default: TRUE)
-#' @param usePanels Specific panels to analyze (NULL uses all available)
-#' @param defaultAssay Name of iSensor assay to set as default (optional)
-#' @param useParallel Enable parallel processing (default: FALSE)
-#' @param nCores Number of cores for parallel processing (NULL uses available-1)
-#' @param metaPanels List of meta-panels to create (see Details)
+#' @param data A \code{Seurat} object or numeric expression matrix (genes x samples).
+#' @param seurLayer Character. Assay layer name to extract data from Seurat object (e.g., "RNA"). Default "RNA".
+#' @param panelSet An \code{iSensorsPanelSet} object containing gene panels to calculate signals for.
+#' @param signals Character vector. Types of signals to compute. Allowed values:
+#'   \code{"mean"}, \code{"mean_normed"}, \code{"median"}, \code{"median_normed"}.
+#'   Default is \code{"mean_normed"}.
+#'
+#' @return If input is a Seurat object, returns the same Seurat object with added assays for each signal.
+#' If input is a numeric matrix, returns an \code{iSensors} object with calculated signals.
 #'
 #' @details
-#' Meta-panels should be specified as named lists with:
-#' \itemize{
-#'   \item \code{srcPanels}: Vector of source panel names
-#'   \item \code{rule}: Combination function (e.g., \code{prod}, \code{sum})
-#' }
+#' The function computes sensor signals for each gene panel by summarizing gene expression values
+#' across panel genes in each sample or cell. Normalization is done by dividing gene expression by
+#' the mean or median expression per sample or gene, depending on the signal type.
 #'
-#' @return
-#' Modified Seurat object with new assays:
-#' \itemize{
-#'   \item Each signal type becomes separate assay (names: 'iSensor_[signal]')
-#'   \item Original data remains unchanged
-#'   \item Meta-panels included if specified
-#' }
+#' Signals are stored in assays within Seurat objects named as \code{"iSensors_<signal>"},
+#' e.g. \code{iSensors_mean_normed}.
 #'
 #' @examples
 #' \dontrun{
-#' # Basic analysis with default parameters
-#' seurat_obj <- iSensor_pipeline(seurat_obj)
-#'
-#' # Advanced analysis with custom settings
-#' seurat_obj <- iSensor_pipeline(
-#'   seurat_obj,
-#'   species = "human",
-#'   signals = c("mean", "median_normed"),
-#'   randPanels = 3,
-#'   metaPanels = list(
-#'     "MyMeta" = list(
-#'       srcPanels = c("Panel1", "Panel2"),
-#'       rule = function(x) sqrt(mean(x))
-#'     )
-#'   )
-#' )
+#' library(Seurat)
+#' 
+#' # Using Seurat object
+#' seurat_obj <- Read10X(data.dir = "path/to/data")
+#' seurat_obj <- CreateSeuratObject(counts = seurat_obj)
+#' panelSet <- LoadSensors(setName = "ArabidopsisAuxin")
+#' 
+#' seurat_obj <- CalcSensors(seurat_obj, seurLayer = "RNA", panelSet = panelSet,
+#'                           signals = c("mean_normed", "median"))
+#' 
+#' # Access sensor signal assay
+#' head(seurat_obj@assays$iSensors_mean_normed@counts)
+#' 
+#' # Using raw matrix
+#' expr_mat <- as.matrix(GetAssayData(seurat_obj, slot = "counts"))
+#' iSensor_obj <- CalcSensors(expr_mat, panelSet = panelSet,
+#'                            signals = c("mean", "median_normed"))
 #' }
 #'
-#' @seealso
-#' \code{\link{create_iSensor}}, \code{\link{iSensor_signal}}
-#'
-#' @importFrom Seurat GetAssayData CreateAssayObject DefaultAssay
 #' @export
-iSensor_pipeline <- function(seuratObject, species = NULL, hormone = NULL, type = NULL, signals = c('mean_normed'), seurLayer = "data",
-                             usePanelPreset = NULL, presetPanelName = NULL,
-                             randPanels = 2, randSize = c(200, 500), majortrend = TRUE,
-                             usePanels = NULL, defaultAssay = NULL, useParallel = FALSE, nCores = NULL,
-                             metaPanels = NULL) {
-  if (class(seuratObject) != 'Seurat') {
-    stop("Error: function must be applied to Seurat object")
+CalcSensors <- function(data, seurLayer = 'RNA', panelSet,
+                        signals = c("mean_normed")) {
+  
+  # Проверка допустимых сигналов
+  allowed_signals <- c("mean", "mean_normed", "median", "median_normed")
+  if (!all(signals %in% allowed_signals)) {
+    stop("Error: allowed signals are: ", paste(allowed_signals, collapse = ", "))
   }
   
-  expression_data <- as.matrix(GetAssayData(seuratObject, layer = seurLayer))
-  expression_data[is.nan(expression_data)] <- 0
-  iSensor_test <- create_iSensor(data = expression_data, species = species, hormone = hormone, type = type)
-  if(!is.null(usePanelPreset)) {
-    iSensor_test <- add_iSensor_panelSet(iSensor_test, panelsSet = usePanelPreset, setName = presetPanelName)
-    iSensor_test <- set_iSensor_workPanel(iSensor_test, presetPanelName)
-  }
-  if(is.null(presetPanelName)) {
-    presetPanelName <- names(iSensor_test$genePanelSets)[1]
-  }
-  cat(presetPanelName, ' panel preset will be used', '\n')
-  iSensor_test <- set_iSensor_workPanel(iSensor_test, presetPanelName)
-  iSensor_test <- add_iSensor_random_panel(iSensor_test, randNum=randPanels, randSize=randSize,
-                                           majortrend = majortrend)
-  
-  for (signal in signals) {
-    if (signal == 'mean') {
-      iSensor_test <- iSensor_signal(iSensor_test, transform = 'mean', normed = FALSE,
-                                     panels = usePanels, doParallel = useParallel, nCores = nCores,
-                                     metaPanels = metaPanels)
+  # Если объект Seurat
+  if (inherits(data, "Seurat")) {
+    exprData <- as.matrix(Seurat::GetAssayData(data, layer = seurLayer))
+    exprData[is.nan(exprData)] <- 0
+    iSensor_obj <- create_iSensors(data = exprData, panelSet = panelSet)
+    
+    for (signal in signals) {
+      transform <- if (grepl("mean", signal)) "mean" else "median"
+      normed <- grepl("normed", signal)
+      iSensor_obj <- iSensor_signal(iSensor_obj, transform = transform, normed = normed)
+      
+      # signalName <- names(iSensor_obj$signals)[[length(iSensor_obj$signals)]]
+      signalName <- signal
+      assayName <- paste0("iSensors_", signalName)
+      newAssay <- Seurat::CreateAssayObject(counts = as(iSensor_obj$signals[[signalName]], "dgCMatrix"))
+      data[[assayName]] <- newAssay
     }
-    if (signal == 'mean_normed') {
-      iSensor_test <- iSensor_signal(iSensor_test, transform = 'mean', normed = TRUE,
-                                     panels = usePanels, doParallel = useParallel, nCores = nCores,
-                                     metaPanels = metaPanels)
+    
+    # if (!is.null(defaultAssay)) {
+    #   defaultAssayName <- paste0("iSensor_", defaultAssay)
+    #   if (!defaultAssayName %in% names(data@assays)) {
+    #     warning("Default assay name not found, skipping DefaultAssay assignment")
+    #   } else {
+    #     Seurat::DefaultAssay(data) <- defaultAssayName
+    #     cat("Set DefaultAssay to", defaultAssayName, "\n")
+    #   }
+    # }
+    
+    return(data)
+    
+  } else if (is.matrix(data) || inherits(data, "dgCMatrix")) {
+    iSensor_obj <- create_iSensors(data = data, panelSet = panelSet)
+    for (signal in signals) {
+      transform <- if (grepl("mean", signal)) "mean" else "median"
+      normed <- grepl("normed", signal)
+      iSensor_obj <- iSensor_signal(iSensor_obj, transform = transform, normed = normed)
     }
-    if (signal == 'median') {
-      iSensor_test <- iSensor_signal(iSensor_test, transform = 'median', normed = FALSE,
-                                     panels = usePanels, doParallel = useParallel, nCores = nCores,
-                                     metaPanels = metaPanels)
-    }
-    if (signal == 'median_normed') {
-      iSensor_test <- iSensor_signal(iSensor_test, transform = 'median', normed = TRUE,
-                                     panels = usePanels, doParallel = useParallel, nCores = nCores,
-                                     metaPanels = metaPanels)
-    }
+    return(iSensor_obj)
+    
+  } else {
+    stop("Error: `data` must be either a Seurat object or an expression matrix")
   }
-  
-  for (assay in names(iSensor_test$Signals)) {
-    seuratObject[[paste0('iSensor_', assay)]] <- CreateAssayObject(counts = as(t(iSensor_test$Signals[[assay]]), "dgCMatrix"))
-  }
-  
-  if (!is.null(defaultAssay)) {
-    DefaultAssay(seuratObject) <- paste0('iSensor_', defaultAssay)
-    cat('Set DefaultAssay to', paste0('iSensor_', defaultAssay, '\n'))
-  }
-  
-  return(seuratObject)
 }
