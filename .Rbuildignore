@@ -10,3 +10,4 @@
 ^\.Ruserdata$
 ^\.gitignore$
 ^\.gitattributes$
+^\.Rproj\.user$

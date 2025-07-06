@@ -2,3 +2,11 @@
 
 export(CalcSensors)
 export(LoadSensors)
+export(iSensorsCisTransPanelCreate)
+export(iSensorsTransPanelCreate)
+import(Biostrings)
+import(dplyr)
+import(magrittr)
+import(purrr)
+import(stringr)
+import(universalmotif)
