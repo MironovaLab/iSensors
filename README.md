@@ -64,7 +64,7 @@ iSensorsTransPanelCreate
 Introduction
 --------------------------------------------------
 
-The **iSensorsTransPanelCreate.R** function generates an object for a trans-type gene panel compatible with iSensors R package.
+The **iSensorsTransPanelCreate** function generates an object for a trans-type gene panel compatible with iSensors R package.
 
 The function receives a list of gene IDs as input (either as a vector or as a txt file), and the the corresponding trivial gene names in txt format (optional).
 
@@ -132,14 +132,14 @@ This is an example of panel with two genes
 
 - *gene_metadata*
 
-| Gene | Gene name | Gene full name |
+| GeneID | GeneName | GeneFullName |
 | ---- | ---------- | --------------|
 | AT1G01020 |ARV1|  none| 
 AT1G01060| LHY | LATE ELONGATED HYPOCOTYL |
 
 - *panel_metadata*
 
-| Species | Panel type | Panel description | Date Created |
+| Species | PanelType | PanelDescription | DateCreated |
 | ---- | ---------- | --------------|----|
 | Arabidopsis thaliana | trans | This is an example of panel with two genes | 2025-06-20 |
 
@@ -166,7 +166,7 @@ iSensorsCisTransPanelCreate
 Introduction
 --------------------------------------------------
 
-The **iSensorsCisTransPanelCreate.R** function performs the recognition of binding sites in promoters using positional weight matrices and generates an object for a cis-trans type panel, if the recognition is limited to differentially expressed genes, and cis-trans type gene panel if not. Format for cis/cis-trans panels is compatible with iSensors R package.
+The **iSensorsCisTransPanelCreate** function performs the recognition of binding sites in promoters using positional weight matrices and generates an object for a cis-trans type panel, if the recognition is limited to differentially expressed genes, and cis-trans type gene panel if not. Format for cis/cis-trans panels is compatible with iSensors R package.
 
 The function receives (1) a set of promoters in FASTA format, (2) a positional probability matrix in Homer format, (3) a list of RNA-seq experiments with logFC and adjusted p-values for each gene (optional) and (4) the the corresponding trivial gene names in txt format (optional).
 
@@ -280,7 +280,7 @@ This is an example of panel with two genes
 
 - *gene_metadata*
 
-| Gene | Chromosome | Site start | Site end | Strand | Site | To TSS | Gene name | Gene full name | 
+| GeneID | Chromosome | SiteStart | SiteEnd | Strand | Site | ToTSS | GeneName | GeneFullName | 
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
 | AT1G04730 | 1 | 1331105 | 1331112 | 1 | TATCGGAA | 28 | CTF18 | CHROMOSOME TRANSMISSION FIDELITY 18 |
 | AT1G05055 | 1 | 1451800 | 1451807 | 1 | TGTCGTGA | 922 | GTF2H2 | general transcription factor II H2 |
@@ -289,7 +289,7 @@ This is an example of panel with two genes
 
 - *panel_metadata*
 
-| Species | Promoter length | Motif model name | Panel type | Transcriptomes experiment info | Date Created |
+| Species | PromoterLength | MotifModelName | PanelType | TranscriptomesExperimentInfo | DateCreated |
 | ---- | ---- |----|----|----|----|
 | Arabidopsis thaliana | 1500 | ARF1 - MA0942.1 | cis-trans | Auxin 1h, auxin 4h | 2025-06-20 |
 
