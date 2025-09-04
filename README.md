@@ -44,7 +44,7 @@ help("iSensors")
 testData <- readRDS("testData/testSeurData.rds")
 
 # Load test panel with meta-panels
-testPanel <- LoadSensors(setName = 'testPanelSet', species = 'AT', hormone = 'cyt', customPanels = TRUE,
+testPanel <- LoadSensors(setName = 'testPanelSet', species = 'AT', hormone = 'aux', customPanels = TRUE,
                           randomInfo = list('n' = 3, 'sizes' = c(100, 200, 300), majortrend = TRUE),
                           metaPanels = list(
                             'meta1' = list('srcPanels' = c("AT_aux_cis_DR5_ARF1", "AT_aux_cistrans_DR5_ARF5_2_up"), rule = mean),
