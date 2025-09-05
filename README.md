@@ -160,6 +160,13 @@ AT1G01060| LHY | LATE ELONGATED HYPOCOTYL |
 
 ` iSensorsTransPanelCreate(panel_name = 'trans_panel', gene_list = 'gene_list.txt', species = 'Arabidopsis thaliana', trivial_names_file = 'Arabidopsis_trivial_names_example.txt', panel_description = 'This is an example of trans panel') `
 
+Output
+------
+
+The function creates an object of the **GenePanel** class and writes it to an ***rda*** file with the name specified in the panel_name variable. The function saves the ***rda*** file to the **iSensors** subdirectory in the working directory. If the working directory does not have an **iSensors** subdirectory, the function creates it. The function does NOT save the **GenePanel** object to the working environment in R.
+
+
+
 iSensorsCisTransPanelCreate
 =========================
 
@@ -317,4 +324,9 @@ This is an example of panel with two genes
                       min_dataset_number = 1,
                       panel_type = 'UP',
                       transcriptomes_info = 'Auxin 1h, auxin 4h') `
+
+Output
+------
+
+The function creates an object of the **GenePanel** class and writes it to an ***rda*** file with the name specified in the panel_name variable. The function saves the ***rda*** file to the **iSensors** subdirectory in the working directory. If the working directory does not have an **iSensors** subdirectory, the function creates it. The function does NOT save the **GenePanel** object to the working environment in R.
 
