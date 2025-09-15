@@ -11,7 +11,7 @@ using predefined and custom gene panels. It allows users to compute signaling ac
 scores, manage gene panels, and perform various analyses on single-cell datasets.
 }
 \seealso{
-\code{\link{LoadSensors}}, \code{\link{CalcSensors}}
+\code{\link{LoadSensors}}, \code{\link{CalcSensors}}, \code{\link{iSensorsCisTransPanelCreate}}, \code{\link{iSensorsTransPanelCreate}}
 }
 \author{
 Maxim Rybakov [aut, cre], 
