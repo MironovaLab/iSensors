@@ -62,6 +62,8 @@ usethis::edit_r_environ()
 ```
 and copy your token to the GITHUB_PAT= your token/
 
+[↑ Back to top](#readme)
+
 ## iSensors documentation
 
 <details>
@@ -188,6 +190,7 @@ expr_mat <- as.matrix(GetAssayData(seurat_obj, slot = "counts"))
 iSensor_obj <- CalcSensors(expr_mat, panelSet = panelSet,
                            signals = c("mean", "median_normed"))
 ```
+[↑ Back to top](#readme)
 
 </details>
 
