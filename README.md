@@ -20,7 +20,19 @@ Additionally, iSensors makes use of:
 - [Biostrings](https://bioconductor.org/packages/Biostrings) – biological string operations.
 - [universalmotif](https://bioconductor.org/packages/universalmotif) – motif representation and analysis.
 
-## Installation
+Installation of this packages in **R** is carried out using the commands
+
+```
+install.packages('stringr')
+install.packages('magrittr')
+install.packages('dplyr')
+
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("Biostrings")
+```
+
+## iSensors installation
 
 You can install the package from GitHub using `devtools`:
 
@@ -43,6 +55,22 @@ Run
 usethis::edit_r_environ()
 ```
 and copy your token to the GITHUB_PAT= your token/
+
+
+<details>
+<summary>Function reference: CalcSensors()</summary>
+
+```r
+# CalcSensors(data, panel, method = "log")
+# 
+# Computes signaling activity scores for a given gene panel.
+# Arguments:
+#   data   - Seurat object or data frame with expression values
+#   panel  - Gene panel name or custom vector of genes
+#   method - Scoring method ("log" or "zscore")
+# Returns:
+#   A data frame with signaling scores for each cell.
+
 
 ## Quick Start
 
