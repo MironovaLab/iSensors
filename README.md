@@ -190,9 +190,11 @@ expr_mat <- as.matrix(GetAssayData(seurat_obj, slot = "counts"))
 iSensor_obj <- CalcSensors(expr_mat, panelSet = panelSet,
                            signals = c("mean", "median_normed"))
 ```
-[↑ Back to top](#readme)
+[↑ Back to top](#table-of-contents)
 
 </details>
+
+[↑ Back to top](#table-of-contents)
 
 <details>
 <summary>Function doc: iSensorsTransPanelCreate()</summary>
