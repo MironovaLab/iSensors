@@ -131,55 +131,62 @@ panelSet2 <- LoadSensors(
 <details>
 <summary>Function doc: CalcSensors()</summary>
 
-</details>
+### Description
+Computes sensor signals based on predefined gene panels from expression data.
+Supports input as Seurat objects or raw expression matrices, and calculates multiple
+summary signals including mean, median, and their normalized versions.
 
-<details>
-<summary>Function reference: CalcSensors()</summary>
-
-</details>
-
-<details>
-<summary>Function reference: CalcSensors()</summary>
-
-</details>
-
-<details>
-<summary>Function reference: CalcSensors()</summary>
-
-</details>
-
-
-## Quick Start
-
-Here's an example of how to load the package, check its version, explore documentation, and run a basic analysis:
-
-```R
-# Load the package
-library(iSensors)
-
-# Check installed version
-packageVersion("iSensors")
-
-# Access general help page
-help("iSensors")
-
-# Load test data (Seurat object)
-testData <- readRDS("testData/testSeurData.rds")
-
-# Load test panel with meta-panels
-testPanel <- LoadSensors(setName = 'testPanelSet', species = 'AT', hormone = 'aux', customPanels = TRUE,
-                          randomInfo = list('n' = 3, 'sizes' = c(100, 200, 300), majortrend = TRUE),
-                          metaPanels = list(
-                            'meta1' = list('srcPanels' = c("AT_aux_cis_DR5_ARF1", "AT_aux_cistrans_DR5_ARF5_2_up"), rule = mean),
-                            'meta2' = list('srcPanels' = c("AT_aux_cis_DR5_ARF1", "AT_aux_cistrans_DR5_ARF5_2_up"), rule = prod))
-                          )
-
-# Calculate signaling scores for selected panels
-result <- CalcSensors(testData,
-                      seurLayer = "data",
-                      panelSet = testPanel,
-                      signals = c("mean_normed", "median"))
+### Usage
+```r
+CalcSensors(data,
+            seurLayer = "RNA",
+            panelSet,
+            signals = "mean_normed")
 ```
+
+### Arguments
+- **data**: A `Seurat` object or numeric expression matrix (genes x samples).  
+- **seurLayer**: Character. Assay layer name to extract data from Seurat object (e.g., "RNA"). Default "RNA".  
+- **panelSet**: An `iSensorsPanelSet` object containing gene panels to calculate signals for.  
+- **signals**: Character vector. Types of signals to compute. Allowed values: `"mean"`, `"mean_normed"`, `"median"`, `"median_normed"`. Default `"mean_normed"`.
+
+### Details
+The function computes sensor signals for each gene panel by summarizing gene expression values
+across panel genes in each sample or cell. Normalization is done by dividing gene expression by
+the mean or median expression per sample or gene, depending on the signal type.
+
+Signals are stored in assays within Seurat objects named as `iSensors_<signal>`,
+e.g. `iSensors_mean_normed`.
+
+### Value
+- If input is a Seurat object: returns the same Seurat object with added assays for each signal.  
+- If input is a numeric matrix: returns an `iSensors` object with calculated signals.
+
+### Examples
+```r
+library(Seurat)
+
+# Using Seurat object
+seurat_obj <- Read10X(data.dir = "path/to/data")
+seurat_obj <- CreateSeuratObject(counts = seurat_obj)
+panelSet <- LoadSensors(setName = "ArabidopsisAuxin")
+
+seurat_obj <- CalcSensors(seurat_obj, seurLayer = "RNA", panelSet = panelSet,
+                          signals = c("mean_normed", "median"))
+
+# Access sensor signal assay
+head(seurat_obj@assays$iSensors_mean_normed@counts)
+
+# Using raw matrix
+expr_mat <- as.matrix(GetAssayData(seurat_obj, slot = "counts"))
+iSensor_obj <- CalcSensors(expr_mat, panelSet = panelSet,
+                           signals = c("mean", "median_normed"))
+```
+
+</details>
+
+<details>
+<summary>Function doc: iSensorsTransPanelCreate()</summary>
 
 iSensorsTransPanelCreate
 =========================
@@ -192,28 +199,6 @@ The **iSensorsTransPanelCreate** function generates an object for a trans-type g
 The function receives a list of gene IDs as input (either as a vector or as a txt file), and the the corresponding trivial gene names in txt format (optional).
 
 The function generates a list of three items. The first is a list **genes** containing gene IDs. The second is a data frame **gene_metadata** containing gene IDs and the corresponding short and full gene names. The third is a data frame **panel_metadata** containing the information about the species, gene panel type, gene panel description, creation date. The function writes the panel to an object in the current environment and saves it as an rda file in the current working directory.
-
-Requirements
-------------
-
-### R packages
-
-- stringr
-- magrittr
-- dplyr
-- Biostrings
-
-Installation of this packages in **R** is carried out using the commands
-
-```
-install.packages('stringr')
-install.packages('magrittr')
-install.packages('dplyr')
-
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-BiocManager::install("Biostrings")
-```
 
 Usage
 ------
@@ -288,7 +273,11 @@ Output
 
 The function creates an object of the **GenePanel** class and writes it to an ***rda*** file with the name specified in the panel_name variable. The function saves the ***rda*** file to the **iSensors** subdirectory in the working directory. If the working directory does not have an **iSensors** subdirectory, the function creates it. The function does NOT save the **GenePanel** object to the working environment in R.
 
+</details>
 
+<details>
+
+<summary>Function doc: iSensorsCisTransPanelCreate()</summary>
 
 iSensorsCisTransPanelCreate
 =========================
@@ -302,33 +291,6 @@ The function receives (1) a set of promoters in FASTA format, (2) a positional p
 
 The function generates a list of three items. The first is a list **genes** containing gene IDs. The second is a data frame **gene_metadata** containing gene IDs, recognized sites, coordinates of each site in the genome, location (forward or reverse strand) and distance of each site relative to the TSS, and the corresponding short and full gene names. The third is a data frame **panel_metadata** containing the information about the species, gene panel type, gene panel description, creation date. 
 The function writes the panel to an object in the current environment and saves it as an rda file in the current working directory.
-
-Requirements
-------------
-
-### R packages
-
-- universalmotif
-- Biostrings
-- stringr
-- magrittr
-- dplyr
-- purrr
-
-Installation of this packages in **R** is carried out using the commands
-
-```
-install.packages('stringr')
-install.packages('magrittr')
-install.packages('dplyr')
-install.packages('purrr')
-
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-
-BiocManager::install("Biostrings")
-BiocManager::install("universalmotif")
-```
 
 Usage
 ------
@@ -398,8 +360,6 @@ AT1G01230 0.094237385 0.999963365 -0.401992625  0.372281038
  ```
 
 
-
-
 #### iSensor panel object
 
 This is an example of panel with two genes 
@@ -422,8 +382,6 @@ This is an example of panel with two genes
 | Species | PromoterLength | MotifModelName | PanelType | TranscriptomesExperimentInfo | DateCreated |
 | ---- | ---- |----|----|----|----|
 | Arabidopsis thaliana | 1500 | ARF1 - MA0942.1 | cis-trans | Auxin 1h, auxin 4h | 2025-06-20 |
-
-  
 
 
 #### Usage examples
@@ -452,4 +410,41 @@ Output
 ------
 
 The function creates an object of the **GenePanel** class and writes it to an ***rda*** file with the name specified in the panel_name variable. The function saves the ***rda*** file to the **iSensors** subdirectory in the working directory. If the working directory does not have an **iSensors** subdirectory, the function creates it. The function does NOT save the **GenePanel** object to the working environment in R.
+
+</details>
+
+## Quick Start
+
+Here's an example of how to load the package, check its version, explore documentation, and run a basic analysis:
+
+```R
+# Load the package
+library(iSensors)
+
+# Check installed version
+packageVersion("iSensors")
+
+# Access general help page
+help("iSensors")
+
+# Load test data (Seurat object)
+testData <- readRDS("testData/testSeurData.rds")
+
+# Load test panel with meta-panels
+testPanel <- LoadSensors(setName = 'testPanelSet', species = 'AT', hormone = 'aux', customPanels = TRUE,
+                          randomInfo = list('n' = 3, 'sizes' = c(100, 200, 300), majortrend = TRUE),
+                          metaPanels = list(
+                            'meta1' = list('srcPanels' = c("AT_aux_cis_DR5_ARF1", "AT_aux_cistrans_DR5_ARF5_2_up"), rule = mean),
+                            'meta2' = list('srcPanels' = c("AT_aux_cis_DR5_ARF1", "AT_aux_cistrans_DR5_ARF5_2_up"), rule = prod))
+                          )
+
+# Calculate signaling scores for selected panels
+result <- CalcSensors(testData,
+                      seurLayer = "data",
+                      panelSet = testPanel,
+                      signals = c("mean_normed", "median"))
+```
+
+
+
 
