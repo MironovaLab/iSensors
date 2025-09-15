@@ -62,7 +62,7 @@ usethis::edit_r_environ()
 ```
 and copy your token to the GITHUB_PAT= your token/
 
-[↑ Back to top](#readme)
+[↑ Back to top](#table-of-contents)
 
 ## iSensors documentation
 
@@ -133,6 +133,7 @@ panelSet2 <- LoadSensors(
   metaPanels = metaPanels
 )
 ```
+[↑ Back to top](#table-of-contents)
 
 </details>
 
@@ -193,8 +194,6 @@ iSensor_obj <- CalcSensors(expr_mat, panelSet = panelSet,
 [↑ Back to top](#table-of-contents)
 
 </details>
-
-[↑ Back to top](#table-of-contents)
 
 <details>
 <summary>Function doc: iSensorsTransPanelCreate()</summary>
@@ -257,9 +256,6 @@ AT1G01060| LHY | LATE ELONGATED HYPOCOTYL |
 | ---- | ---------- | --------------|----|
 | Arabidopsis thaliana | trans | This is an example of panel with two genes | 2025-06-20 |
 
-  
-
-
 #### iSensorsTransPanelCreate Usage examples
 
 - *Arabidopsis thaliana*, input as vector.
@@ -277,6 +273,8 @@ AT1G01060| LHY | LATE ELONGATED HYPOCOTYL |
 ### iSensorsTransPanelCreate Output
 
 The function creates an object of the **GenePanel** class and writes it to an ***rda*** file with the name specified in the panel_name variable. The function saves the ***rda*** file to the **iSensors** subdirectory in the working directory. If the working directory does not have an **iSensors** subdirectory, the function creates it. The function does NOT save the **GenePanel** object to the working environment in R.
+
+[↑ Back to top](#table-of-contents)
 
 </details>
 
@@ -360,7 +358,6 @@ AT1G01225 -0.398548781  0.999963365 0.080885801 0.980423396
 AT1G01230 0.094237385 0.999963365 -0.401992625  0.372281038
  ```
 
-
 #### iSensor panel object
 
 This is an example of panel with two genes 
@@ -412,6 +409,8 @@ This is an example of panel with two genes
 
 The function creates an object of the **GenePanel** class and writes it to an ***rda*** file with the name specified in the panel_name variable. The function saves the ***rda*** file to the **iSensors** subdirectory in the working directory. If the working directory does not have an **iSensors** subdirectory, the function creates it. The function does NOT save the **GenePanel** object to the working environment in R.
 
+[↑ Back to top](#table-of-contents)
+
 </details>
 
 ## Quick Start
@@ -446,6 +445,7 @@ result <- CalcSensors(testData,
                       signals = c("mean_normed", "median"))
 ```
 
+[↑ Back to top](#table-of-contents)
 
 
 
