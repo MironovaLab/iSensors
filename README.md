@@ -70,7 +70,8 @@ and copy your token to the GITHUB_PAT= your token/
 #   method - Scoring method ("log" or "zscore")
 # Returns:
 #   A data frame with signaling scores for each cell.
-
+```
+</details> 
 
 ## Quick Start
 
