@@ -13,5 +13,5 @@
 #' Victoria Mironova [aut], 
 #' Vladislav Dolgikh [aut]
 #' @keywords package
-#' @seealso \code{\link{LoadSensors}}, \code{\link{CalcSensors}}
+#' @seealso \code{\link{LoadSensors}}, \code{\link{CalcSensors}}, \code{\link{iSensorsCisTransPanelCreate}}, \code{\link{iSensorsTransPanelCreate}}
 NULL
