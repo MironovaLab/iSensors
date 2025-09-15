@@ -2,12 +2,9 @@
 
 ## Table of Contents
 - [Dependencies](#dependencies)
-- [Installation](#installation)
-- [documentation](#documentation)
-- [Function Reference](#function-reference)
-  - [LoadSensors](#loadsensors)
-  - [CalcSensors](#calcsensors)
-- [Quick Start](#quick start)
+- [iSensors installation](#isensors-installation)
+- [iSensors documentation](#isensors-documentation)
+- [Quick Start](#quick-start)
 
 **iSensors** is a package for analyzing signaling activity scores of gene panels based on single-cell RNA-seq data stored in Seurat objects. The package allows you to compute signaling activity scores for specified gene panels and store the results as new assays.
 
