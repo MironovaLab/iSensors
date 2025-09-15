@@ -2,6 +2,24 @@
 
 **iSensors** is a package for analyzing signaling activity scores of gene panels based on single-cell RNA-seq data stored in Seurat objects. The package allows you to compute signaling activity scores for specified gene panels and store the results as new assays.
 
+## Dependencies
+
+The **iSensors** package depends on the following R packages:
+
+- [Seurat](https://cran.r-project.org/package=Seurat) – core infrastructure for single-cell data.
+- [Matrix](https://cran.r-project.org/package=Matrix) – sparse matrix operations.
+- [stats] and [methods] – base R packages.
+- [utils] – base R package.
+
+Additionally, iSensors makes use of:
+
+- [dplyr](https://cran.r-project.org/package=dplyr) – data manipulation.
+- [magrittr](https://cran.r-project.org/package=magrittr) – piping (`%>%`).
+- [purrr](https://cran.r-project.org/package=purrr) – functional programming tools.
+- [stringr](https://cran.r-project.org/package=stringr) – string processing.
+- [Biostrings](https://bioconductor.org/packages/Biostrings) – biological string operations.
+- [universalmotif](https://bioconductor.org/packages/universalmotif) – motif representation and analysis.
+
 ## Installation
 
 You can install the package from GitHub using `devtools`:
