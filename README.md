@@ -417,6 +417,8 @@ The function creates an object of the **GenePanel** class and writes it to an **
 
 Here's an example of how to load the package, check its version, explore documentation, and run a basic analysis:
 
+### Using iSensors via default gene panels
+
 ```R
 # Load the package
 library(iSensors)
@@ -444,6 +446,10 @@ result <- CalcSensors(testData,
                       panelSet = testPanel,
                       signals = c("mean_normed", "median"))
 ```
+
+### Using iSensors via custom trans gene panels
+
+### Using iSensors via custom cis-trans gene panels
 
 [↑ Back to top](#table-of-contents)
 
