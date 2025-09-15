@@ -158,7 +158,7 @@ the mean or median expression per sample or gene, depending on the signal type.
 Signals are stored in assays within Seurat objects named as `iSensors_<signal>`,
 e.g. `iSensors_mean_normed`.
 
-### Value
+### CalcSensors Value
 - If input is a Seurat object: returns the same Seurat object with added assays for each signal.  
 - If input is a numeric matrix: returns an `iSensors` object with calculated signals.
 
