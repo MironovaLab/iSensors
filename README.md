@@ -98,10 +98,10 @@ LoadSensors(setName,
 ```
 
 ### LoadSensors Arguments
-- **setName**: Character. Name for the panel set to use.  
-- **species**: Character vector or NULL. Filter panels by species (e.g. "AT", "SL"). Default NULL.  
-- **hormone**: Character vector or NULL. Filter panels by hormone category (e.g. "aux", "cyt"). Default NULL.  
-- **type**: Character vector or NULL. Filter panels by type (e.g. "cis", "trans"). Default NULL.  
+- **setName**: Character. A selected by user name that will be used for panel set object.  
+- **species**: Character vector or NULL. Filter panels by species ("AT" for Arabidopsis thaliana and "SL" for Solanum lycopersicum). Default NULL. Used only for reading default panels.
+- **hormone**: Character vector or NULL. Filter panels by hormone category ("aux" for auxin and "cyt" for cytokinin). Default NULL. Used only for reading default panels. 
+- **type**: Character vector or NULL. Filter panels by type ("cis" for cis-panels, "trans" for trans-panels, “cistrans” for reg-panels). Default NULL. Used only for reading default panels.
 - **defaultPanels**: Logical. Include default panels from package data. Default TRUE.  
 - **customPanels**: Logical. Include custom panels from a local "iSensors/" folder. Default FALSE.  
 - **random**: Logical. Add random gene panels automatically. Default TRUE.  
@@ -124,7 +124,7 @@ An object of class `iSensorsPanelSet`, a list containing the loaded panels and a
 panelSet <- LoadSensors(
   setName = "ArabidopsisAuxin",
   species = "AT",
-  hormone = "auxin",
+  hormone = "aux",
   type = "cis"
 )
 
@@ -138,6 +138,7 @@ metaPanels <- list(
 
 panelSet2 <- LoadSensors(
   setName = "CustomSet",
+  defaultPanels = FALSE,
   customPanels = TRUE,
   randomInfo = list(n = 3, sizes = c(100,200,300), majortrend = TRUE),
   metaPanels = metaPanels
@@ -443,7 +444,7 @@ help("iSensors")
 testData <- readRDS("testData/testSeurData.rds")
 
 # Load test panel with meta-panels
-testPanel <- LoadSensors(setName = 'testPanelSet', species = 'AT', hormone = 'aux', customPanels = TRUE,
+testPanel <- LoadSensors(setName = 'testPanelSet', species = 'AT', hormone = 'aux', customPanels = FALSE,
                           randomInfo = list('n' = 3, 'sizes' = c(100, 200, 300), majortrend = TRUE),
                           metaPanels = list(
                             'meta1' = list('srcPanels' = c("AT_aux_cis_DR5_ARF1", "AT_aux_cistrans_DR5_ARF5_2_up"), rule = mean),
@@ -459,7 +460,67 @@ result <- CalcSensors(testData,
 
 ### Using iSensors via custom trans gene panels
 
+```R
+# Load test data (Seurat object)
+
+testData <- readRDS("testSeurData.rds")
+
+# Creating trans panel
+
+iSensorsTransPanelCreate(panel_name = 'customTransPanel', 
+                         gene_list = c('AT1G01010', 'AT1G01030', 'AT1G01040'), 
+                         species = 'Arabidopsis thaliana', 
+                         panel_description = 'Arabidopsis_trans_panel_with_3_genes')
+
+
+# Load test panel with meta-panels
+
+customTransPanel <- LoadSensors(setName = 'customTransPanelSet',
+                               customPanels = TRUE,
+                               randomInfo = list('n' = 3, 'sizes' = c(100, 200, 300), majortrend = TRUE),
+                               metaPanels = list('meta1' = list('srcPanels' = c("AT_aux_cis_DR5_ARF1", "AT_aux_cistrans_DR5_ARF5_2_up"), rule = mean),
+                                                 'meta2' = list('srcPanels' = c("AT_aux_cis_DR5_ARF1", "AT_aux_cistrans_DR5_ARF5_2_up"), rule = prod))
+)
+
+# Calculate signaling scores for selected panels
+
+result <- CalcSensors(testData,
+                      seurLayer = "data",
+                      panelSet = customTransPanel,
+                      signals = c("mean_normed", "median"))
+```
+
 ### Using iSensors via custom cis-trans gene panels
+
+```R
+# Load test data (Seurat object)
+
+testData <- readRDS("testSeurData.rds")
+
+# Creating trans panel
+
+iSensorsCisTransPanelCreate(panel_name = 'customCisTransPanel',
+                            gene_list = c('AT1G01010', 'AT1G01030', 'AT1G01040'),
+                            species = 'Arabidopsis thaliana',
+                            panel_description = 'Arabidopsis_cistrans_panel_with_3_genes')
+
+
+# Load test panel with meta-panels
+
+customCisTransPanel <- LoadSensors(setName = 'customCisTransPanelSet',
+                               customPanels = TRUE,
+                               randomInfo = list('n' = 3, 'sizes' = c(100, 200, 300), majortrend = TRUE),
+                               metaPanels = list('meta1' = list('srcPanels' = c("AT_aux_cis_DR5_ARF1", "AT_aux_cistrans_DR5_ARF5_2_up"), rule = mean),
+                                                 'meta2' = list('srcPanels' = c("AT_aux_cis_DR5_ARF1", "AT_aux_cistrans_DR5_ARF5_2_up"), rule = prod))
+)
+
+# Calculate signaling scores for selected panels
+
+result <- CalcSensors(testData,
+                      seurLayer = "data",
+                      panelSet = customCisTransPanel,
+                      signals = c("mean_normed", "median"))
+```
 
 [↑ Back to top](#table-of-contents)
 
