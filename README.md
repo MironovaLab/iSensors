@@ -72,7 +72,7 @@ and copy your token to the GITHUB_PAT= your token/
 - A meta panel is a derived panel that does not directly correspond to a predefined list of genes. Instead, it is constructed by combining the results of several existing panels using a user-defined aggregation rule.
   - Source panels: the set of real gene panels whose signals will be combined.
   - Rule: a function that defines how to aggregate the signals of the source panels (for example, mean, sum, product, or a custom function).
-  The output of a meta panel is therefore a vector of sensor values (one value per cell/sample), generated according to the chosen rule.
+The output of a meta panel is therefore a vector of sensor values (one value per cell/sample), generated according to the chosen rule.
 - Default panels for Arabidopsis thaliana (cis-, trans-, and reg-types for auxin and cytokinin) and Solanum lycopersicum (cis-type for auxin) are available
 
 <details>
