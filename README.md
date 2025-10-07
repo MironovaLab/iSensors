@@ -66,12 +66,9 @@ and copy your token to the GITHUB_PAT= your token/
 ## iSensors documentation
 ### Default panel description
 - The default gene panels include three types:
-- **cis-sensors**  
-  - built from genes containing auxin-responsive cis-regulatory motifs  
-- **trans-sensors**  
-  - built from genes involved in auxin-regulated processes  
-- **reg-sensors**  
-  - combining both criteria
+  - **cis-sensors**, built from genes containing auxin-responsive cis-regulatory motifs  
+  - **trans-sensors**, built from genes involved in auxin-regulated processes  
+  - **reg-sensors**, combining both criteria
 - what is meta panels, list of aggregation rules
 
 <details>
