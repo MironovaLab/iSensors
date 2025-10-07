@@ -26,8 +26,7 @@ Additionally, iSensors makes use of:
 - [Biostrings](https://bioconductor.org/packages/Biostrings) – biological string operations.
 - [universalmotif](https://bioconductor.org/packages/universalmotif) – motif representation and analysis.
 
-Installation of this packages in **R** is carried out using the commands
-
+The second set of packages is set to “manually installed”. Use the following commands for installation:
 ```
 install.packages('stringr')
 install.packages('magrittr')
@@ -65,6 +64,15 @@ and copy your token to the GITHUB_PAT= your token/
 [↑ Back to top](#table-of-contents)
 
 ## iSensors documentation
+### Default panel description
+- The default gene panels include three types:
+- **cis-sensors**  
+  - built from genes containing auxin-responsive cis-regulatory motifs  
+- **trans-sensors**  
+  - built from genes involved in auxin-regulated processes  
+- **reg-sensors**  
+  - combining both criteria
+- what is meta panels, list of aggregation rules
 
 <details>
 <summary>Function doc: LoadSensors()</summary>
