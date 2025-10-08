@@ -64,6 +64,10 @@ and copy your token to the GITHUB_PAT= your token/
 [↑ Back to top](#table-of-contents)
 
 ## iSensors documentation
+
+<details>
+<summary>Panels doc: default panels</summary>
+
 ### Default panel description
 - The default gene panels include three types:
   - **cis-sensors**, built from genes containing auxin-responsive cis-regulatory motifs
@@ -75,6 +79,10 @@ and copy your token to the GITHUB_PAT= your token/
     
   The output of a meta panel is therefore a vector of sensor values (one value per cell/sample), generated according to the chosen rule.
 - Default panels for Arabidopsis thaliana (cis-, trans-, and reg-types for auxin and cytokinin) and Solanum lycopersicum (cis-type for auxin) are available
+
+[↑ Back to top](#table-of-contents)
+
+</details>
 
 <details>
 <summary>Function doc: LoadSensors()</summary>
