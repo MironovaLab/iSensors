@@ -44,7 +44,7 @@
 #' }
 #'
 #' @export
-CalcSensors <- function(data, seurLayer = 'RNA', panelSet,
+CalcSensors <- function(data, seurLayer = 'data', panelSet,
                         signals = c("mean_normed")) {
   
   # Проверка допустимых сигналов

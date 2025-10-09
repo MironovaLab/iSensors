@@ -122,7 +122,7 @@ iSensor_signal <- function(iSensor_obj, transform = "mean",
       src <- metaInfo$srcPanels
       rule <- metaInfo$rule
       # colnames(signalDF)
-      if (!all(src %in% colnames(signalDF))) {
+      if (!all(src %in% rownames(signalDF))) {
         missing <- setdiff(src, colnames(signalDF))
         warning(paste("Meta panel", metaName, "skipped: missing source panels:", paste(missing, collapse = ", ")))
         next

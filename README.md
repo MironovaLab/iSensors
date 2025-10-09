@@ -167,14 +167,14 @@ summary signals including mean, median, and their normalized versions.
 ### CalcSensors Usage
 ```r
 CalcSensors(data,
-            seurLayer = "RNA",
+            seurLayer = "data",
             panelSet,
             signals = "mean_normed")
 ```
 
 ### CalcSensors Arguments
 - **data**: A `Seurat` object or numeric expression matrix (genes x samples).  
-- **seurLayer**: Character. Assay layer name to extract data from Seurat object (e.g., "RNA"). Default "RNA".  
+- **seurLayer**: Character. Assay layer name to extract data from Seurat object (e.g., "data", "counts"). Default "data".  
 - **panelSet**: An `iSensorsPanelSet` object containing gene panels to calculate signals for.  
 - **signals**: Character vector. Types of signals to compute. Allowed values: `"mean"`, `"mean_normed"`, `"median"`, `"median_normed"`. Default `"mean_normed"`.
 
