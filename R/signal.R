@@ -121,16 +121,19 @@ iSensor_signal <- function(iSensor_obj, transform = "mean",
       metaInfo <- additional$meta[[metaName]]
       src <- metaInfo$srcPanels
       rule <- metaInfo$rule
-      cat(colnames(signalDF))
-      if (!all(src %in% colnames(signalDF))) {
-        missing <- setdiff(src, colnames(signalDF))
+      # cat(rownames(signalDF))
+      if (!all(src %in% rownames(signalDF))) {
+        missing <- setdiff(src, rownames(signalDF))
         warning(paste("Meta panel", metaName, "skipped: missing source panels:", paste(missing, collapse = ", ")))
         next
       }
       
-      signalDF[[metaName]] <- apply(signalDF[, src, drop = FALSE], 1, rule)
+      # signalDF[[metaName]] <- apply(signalDF[src, , drop = FALSE], 2, rule)
+      new_row <- apply(signalDF[src, , drop = FALSE], 2, rule)
       # Переместим новую колонку в начало
-      signalDF <- signalDF[, c(metaName, setdiff(names(signalDF), metaName))]
+      signalDF <- rbind(signalDF, new_row)
+      rownames(signalDF)[nrow(signalDF)] <- metaName
+      # signalDF <- signalDF[, c(metaName, setdiff(names(signalDF), metaName))]
     }
   }
   # colnames(signalDF) <- panelNames
