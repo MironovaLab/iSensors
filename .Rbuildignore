@@ -4,6 +4,7 @@
 ^.*\.Rproj$
 
 ^data/
+^tutorial$
 ^scripts/
 ^.*\.Rhistory$
 ^.*\.RData$
