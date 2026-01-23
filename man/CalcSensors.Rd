@@ -4,12 +4,12 @@
 \alias{CalcSensors}
 \title{Calculate Sensor Signals from Expression Data}
 \usage{
-CalcSensors(data, seurLayer = "RNA", panelSet, signals = c("mean_normed"))
+CalcSensors(data, seurLayer = "data", panelSet, signals = c("mean_normed"))
 }
 \arguments{
 \item{data}{A \code{Seurat} object or numeric expression matrix (genes x samples).}
 
-\item{seurLayer}{Character. Assay layer name to extract data from Seurat object (e.g., "data", "counst"). Default "data".}
+\item{seurLayer}{Character. Assay layer name to extract data from Seurat object (e.g., "RNA"). Default "RNA".}
 
 \item{panelSet}{An \code{iSensorsPanelSet} object containing gene panels to calculate signals for.}
 
@@ -43,7 +43,7 @@ seurat_obj <- Read10X(data.dir = "path/to/data")
 seurat_obj <- CreateSeuratObject(counts = seurat_obj)
 panelSet <- LoadSensors(setName = "ArabidopsisAuxin")
 
-seurat_obj <- CalcSensors(seurat_obj, seurLayer = "data", panelSet = panelSet,
+seurat_obj <- CalcSensors(seurat_obj, seurLayer = "RNA", panelSet = panelSet,
                           signals = c("mean_normed", "median"))
 
 # Access sensor signal assay

@@ -1,7 +1,7 @@
 Package: iSensors
 Type: Package
 Title: Single-Cell Gene Panel Analysis Package
-Version: 1.2.0
+Version: 1.2.1
 Authors@R: 
     c(
       person("Maxim", "Rybakov", email = "m.al.rybakov@gmail.com", role = c("aut", "cre")),
@@ -19,7 +19,13 @@ Imports:
     stats,
     methods,
     utils,
-    Matrix
+    Matrix,
+    Biostrings,
+    dplyr,
+    magrittr,
+    purrr,
+    stringr,
+    universalmotif
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3

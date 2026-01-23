@@ -47,3 +47,13 @@ compute_signal(exprData, detectors, method = "mean", normed = TRUE, normBy = "co
 # 4. С нормировкой по строкам, метод median
 testRes <- compute_signal(exprData, detectors, method = "median", normed = TRUE, normBy = "rows")
 str(testRes)
+
+
+PanelTest_res <- ListSensorPanels()
+PanelTest_res
+
+Inspect_res <- InspectSensorPanel("SL_aux_cis_DR5_ARF6.rda")
+summary(Inspect_res)
+View(Inspect_res)
+
+devtools::test()

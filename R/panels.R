@@ -156,3 +156,130 @@ LoadSensors <- function(setName, species = NULL, hormone = NULL, type = NULL,
   panelSet <- create_iSensorsPanelSet(name = setName, panelsList = resultList, additional = additional)
   return(panelSet)
 }
+
+
+#' List Available Gene Sensor Panel Files
+#'
+#' Returns names of all available panel `.rda` files from default package data
+#' and from a local `iSensors/` directory if it exists.
+#'
+#' @return Named list with elements `default` and `custom`, each containing
+#' character vectors of panel file names.
+#'
+#' @export
+ListSensorPanels <- function() {
+  
+  result <- list()
+  
+  # default panels
+  defaultDir <- system.file("extdata/geneSensors", package = "iSensors")
+  defaultFiles <- list.files(
+    path = defaultDir,
+    pattern = "\\.rda$",
+    full.names = FALSE
+  )
+  result$default <- defaultFiles
+  
+  # custom panels
+  customDir <- file.path(getwd(), "iSensors")
+  
+  if (!dir.exists(customDir)) {
+    message('No "iSensors/" directory found in the working directory, only default panels listed')
+    result$custom <- character(0)
+    
+  } else {
+    customFiles <- list.files(
+      path = customDir,
+      pattern = "\\.rda$",
+      full.names = FALSE
+    )
+    
+    if (length(customFiles) == 0) {
+      message('"iSensors/" directory exists but contains no panel files, only default panels listed')
+    }
+    
+    result$custom <- customFiles
+  }
+  
+  return(result)
+}
+
+
+#' Inspect Gene Sensor Panel Structure
+#'
+#' Loads a gene sensor panel by file name and prints a structured overview
+#' of its internal fields (optional).
+#'
+#' @param fileName Character. Name of the panel `.rda` file.
+#' @param verbose Logical. If TRUE (default), prints info to console; if FALSE, prints nothing.
+#'
+#' @return The loaded panel object.
+#'
+#' @export
+InspectSensorPanel <- function(fileName, verbose = TRUE) {
+  
+  # try default directory first
+  defaultDir <- system.file("extdata/geneSensors", package = "iSensors")
+  defaultPath <- file.path(defaultDir, fileName)
+  
+  # then custom directory
+  customDir <- file.path(getwd(), "iSensors")
+  customPath <- file.path(customDir, fileName)
+  
+  if (file.exists(defaultPath)) {
+    panel <- load_panel_from_rda(defaultPath)
+    source <- "default"
+    
+  } else if (file.exists(customPath)) {
+    panel <- load_panel_from_rda(customPath)
+    source <- "custom"
+    
+  } else {
+    stop('Panel file "', fileName, '" not found in default or custom directories')
+  }
+  
+  if (isTRUE(verbose)) {
+    cat("Panel source :", source, "\n")
+    cat("Panel name   :", panel$name, "\n\n")
+    cat("Panel fields:\n")
+    
+    for (field in names(panel)) {
+      
+      value <- panel[[field]]
+      
+      # atomic scalar
+      if (length(value) == 1 && !is.list(value)) {
+        cat(" -", field, ":", value, "\n")
+        
+        # data.frame
+      } else if (is.data.frame(value)) {
+        cat(
+          " - ", field, " : data.frame (",
+          nrow(value), " x ", ncol(value), ")\n",
+          "   columns: ", paste(colnames(value), collapse = ", "),
+          "\n",
+          sep = ""
+        )
+        
+        # list (but not data.frame)
+      } else if (is.list(value)) {
+        cat(
+          " - ", field, " : list (",
+          length(value), " elements)\n",
+          sep = ""
+        )
+        
+        # vector (genes, etc.)
+      } else {
+        cat(
+          " - ", field, " : ",
+          class(value), " (length ", length(value), ")\n",
+          sep = ""
+        )
+      }
+    }
+  }
+  
+  return(panel)
+}
+
