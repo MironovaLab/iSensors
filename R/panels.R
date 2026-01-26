@@ -25,7 +25,8 @@ filter_and_load_panels <- function(panelsDir, species = NULL, hormone = NULL, ty
   panelsFiles <- list.files(path = panelsDir, pattern = '\\.rda$', full.names = FALSE)
   
   if (filter) {
-    name_delim <- '_'
+    # previous '_'
+    name_delim <- '-'
     firstThreeParts <- lapply(strsplit(panelsFiles, name_delim), function(x) head(x, 3))
     all_species  <- unique(sapply(firstThreeParts, function(x) x[1]))
     all_hormones <- unique(sapply(firstThreeParts, function(x) x[2]))
