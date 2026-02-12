@@ -24,7 +24,8 @@ Imports:
     dplyr,
     magrittr,
     purrr,
-    stringr,
+    stringr
+Suggests:
     universalmotif
 Encoding: UTF-8
 LazyData: true
