@@ -3,6 +3,7 @@ load_panel_from_rda <- function(file_path) {
   panelEnv <- new.env()
   load(file_path, envir = panelEnv)
   panelName <- ls(envir = panelEnv)
+  # print(panelName)
   if (length(panelName) != 1) {
     warning("Expected one object per panel file, got: ", paste(panelName, collapse = ", "))
   }

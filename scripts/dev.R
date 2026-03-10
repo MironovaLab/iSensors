@@ -63,3 +63,61 @@ result <- CalcSensors(testMatr,
 View(result)
 slotNames(result)
 View(result@assays$iSensors_median$counts)
+
+save_panel_to_rda <- function(panel, new_name, folder_path) {
+  # Проверка, что panel - валидный объект панели
+  check_iSensorsPanel_obj(panel)
+  
+  # Создаем временное окружение
+  temp_env <- new.env()
+  
+  # Используем panel$name как имя переменной в .rda файле
+  panel$name <- new_name
+  variable_name <- panel$name
+  
+  # Сохраняем панель в окружение под нужным именем
+  assign(new_name, panel, envir = temp_env)
+  
+  # Сохраняем в файл
+  save(list = new_name, 
+       file = paste0(folder_path, new_name, '.rda'),
+       envir = temp_env)
+  
+  invisible(TRUE)
+}
+
+create_panel_folder <- function(folder_path) {
+  # Проверяем, существует ли уже папка
+  if (!dir.exists(folder_path)) {
+    # Создаем папку (recursive = TRUE создает все промежуточные папки)
+    dir.create(folder_path, recursive = TRUE)
+    message("Папка создана: ", folder_path)
+    return(TRUE)
+  } else {
+    message("Папка уже существует: ", folder_path)
+    return(FALSE)
+  }
+}
+
+change_panel_names <- function() {
+  create_panel_folder('geneSensors_new/')
+  panels_info <- ListSensorPanels()
+  
+  for (panel_file in panels_info$default) {
+    panel_file_no_extn <- gsub("\\.rda$", "", panel_file)
+    panel <- InspectSensorPanel(panel_file, verbose = FALSE)
+    
+    if (panel_file_no_extn != panel$name) {
+      message('Renaming ', panel$name, ' with ', panel_file_no_extn)
+      panel$name <- panel_file_no_extn
+    }
+    if (grepl("cistrans", panel$name)) {
+      panel$name <- gsub("cistrans", "reg", panel$name)
+    }
+    save_panel_to_rda(panel, panel$name, 'geneSensors_new/')
+    
+  }
+}
+change_panel_names()
+
+system.file("extdata/geneSensors", package = "iSensors")

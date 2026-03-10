@@ -52,8 +52,9 @@ str(testRes)
 PanelTest_res <- ListSensorPanels()
 PanelTest_res
 
-Inspect_res <- InspectSensorPanel("SL_aux_cis_DR5_ARF6.rda")
+Inspect_res <- InspectSensorPanel("ATH-aux-reg-IR8-ARF8-up.rda")
 summary(Inspect_res)
 View(Inspect_res)
 
 devtools::test()
+
