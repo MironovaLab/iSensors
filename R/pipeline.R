@@ -45,7 +45,7 @@
 #'
 #' @export
 CalcSensors <- function(data, seurLayer = 'data', panelSet,
-                        signals = c("mean_normed")) {
+                        signals = c("mean_normed"), normBy = "cols") {
   
   # Проверка допустимых сигналов
   allowed_signals <- c("mean", "mean_normed", "median", "median_normed")
@@ -62,7 +62,7 @@ CalcSensors <- function(data, seurLayer = 'data', panelSet,
     for (signal in signals) {
       transform <- if (grepl("mean", signal)) "mean" else "median"
       normed <- grepl("normed", signal)
-      iSensor_obj <- iSensor_signal(iSensor_obj, transform = transform, normed = normed)
+      iSensor_obj <- iSensor_signal(iSensor_obj, transform = transform, normed = normed, normBy = normBy)
       
       # signalName <- names(iSensor_obj$signals)[[length(iSensor_obj$signals)]]
       signalName <- signal
@@ -88,7 +88,7 @@ CalcSensors <- function(data, seurLayer = 'data', panelSet,
     for (signal in signals) {
       transform <- if (grepl("mean", signal)) "mean" else "median"
       normed <- grepl("normed", signal)
-      iSensor_obj <- iSensor_signal(iSensor_obj, transform = transform, normed = normed)
+      iSensor_obj <- iSensor_signal(iSensor_obj, transform = transform, normed = normed, normBy = normBy)
     }
     return(iSensor_obj)
     
