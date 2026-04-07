@@ -142,11 +142,11 @@ iSensor_signal <- function(iSensor_obj, transform = "mean",
   transformName <- transform
   if (normed) {
     transformName <- paste0(transform, "_normed")
-    if (normBy == "rows") {
-      transformName <- paste0(transform, "_by_rows")
-    }
+    # if (normBy == "rows") {
+    #   transformName <- paste0(transform, "_by_rows")
+    # }
   }
-  
+
   # Сохраняем сигнал в объект
   if (is.null(iSensor_obj$signals)) {
     iSensor_obj$signals <- list()

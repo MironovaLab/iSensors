@@ -35,9 +35,18 @@ testPanel <- LoadSensors(setName = 'testPanelSet', species = 'AT', hormone = 'cy
                            'meta2' = list('srcPanels' = c("AT-cyt-cis-ARR1-1", "AT-cyt-cistrans-ARR1-1down"), rule = prod))
 )
 
+testPanel <- LoadSensors(setName = 'testPanelSet', species = 'ATH', hormone = 'aux', customPanels = FALSE,
+                         randomInfo = list('n' = 3, 'sizes' = c(100, 200, 300), majortrend = TRUE))
+
 result <- CalcSensors(seurat_obj,
                       seurLayer = 'data',
                       panelSet = testPanel,
                       signals = c("mean_normed", "median"))
+
+result <- CalcSensors(seurat_obj,
+                      seurLayer = 'data',
+                      panelSet = testPanel,
+                      signals = c("mean_normed"), normBy='rows')
+
 View(result)
 rownames(result[['iSensors_median']])
