@@ -49,9 +49,9 @@ CalcSensors <- function(data, seurLayer = 'data', panelSet,
   
   # Проверка допустимых сигналов
   allowed_signals <- c("mean", "mean_normed", "median", "median_normed")
-  if (!all(signals %in% allowed_signals)) {
-    stop("Error: allowed signals are: ", paste(allowed_signals, collapse = ", "))
-  }
+  # if (!all(signals %in% allowed_signals)) {
+    # stop("Error: allowed signals are: ", paste(allowed_signals, collapse = ", "))
+  # }
   
   # Если объект Seurat
   if (inherits(data, "Seurat")) {
