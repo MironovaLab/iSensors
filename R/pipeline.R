@@ -67,7 +67,7 @@ CalcSensors <- function(data, seurLayer = 'data', panelSet,
       # signalName <- names(iSensor_obj$signals)[[length(iSensor_obj$signals)]]
       signalName <- signal
       assayName <- paste0("iSensors_", signalName)
-      print(signalName)
+      # print(signalName)
       newAssay <- Seurat::CreateAssayObject(counts = as(iSensor_obj$signals[[signalName]], "dgCMatrix"))
       data[[assayName]] <- newAssay
     }
