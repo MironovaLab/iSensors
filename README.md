@@ -48,7 +48,7 @@ install.packages("devtools")
 # Install the iSensor package from main
 devtools::install_github("MironovaLab/iSensors")
 # or from other branch
-devtools::install_github("MironovaLab/iSensors", ref = "devel")
+devtools::install_github("MironovaLab/iSensors", ref = "iSensors-dev")
 ```
 In case dealing with a mistake like:
 ```
