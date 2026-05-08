@@ -75,29 +75,29 @@ iSensor_signal <- function(iSensor_obj, transform = "mean",
     if (normed) {
       if (method == "mean") {
         # wrong:
-        # exprData <- if (normBy == "cols") exprData / safe_colMeans(exprData) else exprData / rowMeans(exprData)
-        exprData <- if (normBy == "cols") {
-          sweep(exprData, 2, safe_colMeans(exprData), "/")
-          # cm <- safe_colMeans(exprData)
-          # exprData <- t(t(exprData) / cm)
-        } else {
-          sweep(exprData, 1, rowMeans(exprData), "/")
-          # rm <- rowMeans(exprData)
-          # exprData <- t(t(exprData) / rm)
-        }
+        exprData <- if (normBy == "cols") exprData / safe_colMeans(exprData) else exprData / rowMeans(exprData)
+        # exprData <- if (normBy == "cols") {
+        #   sweep(exprData, 2, safe_colMeans(exprData), "/")
+        #   # cm <- safe_colMeans(exprData)
+        #   # exprData <- t(t(exprData) / cm)
+        # } else {
+        #   sweep(exprData, 1, rowMeans(exprData), "/")
+        #   # rm <- rowMeans(exprData)
+        #   # exprData <- t(t(exprData) / rm)
+        # }
       } else if (method == "median") {
         median_func <- function(x) median(x[x != 0], na.rm = TRUE)
         # wrong:
-        # exprData <- if (normBy == "cols") exprData / apply(exprData, 2, median_func) else exprData / apply(exprData, 1, median_func)
-        exprData <- if (normBy == "cols") {
-          sweep(exprData, 2, apply(exprData, 2, median_func), "/")
-          # med <- apply(exprData, 2, median_func)
-          # exprData <- t(t(exprData) / med)
-        } else {
-          sweep(exprData, 1, apply(exprData, 1, median_func), "/")
-          # med <- apply(exprData, 1, median_func)
-          # exprData <- t(exprData / med)
-        }
+        exprData <- if (normBy == "cols") exprData / apply(exprData, 2, median_func) else exprData / apply(exprData, 1, median_func)
+        # exprData <- if (normBy == "cols") {
+        #   sweep(exprData, 2, apply(exprData, 2, median_func), "/")
+        #   # med <- apply(exprData, 2, median_func)
+        #   # exprData <- t(t(exprData) / med)
+        # } else {
+        #   sweep(exprData, 1, apply(exprData, 1, median_func), "/")
+        #   # med <- apply(exprData, 1, median_func)
+        #   # exprData <- t(exprData / med)
+        # }
       }
     }
     
