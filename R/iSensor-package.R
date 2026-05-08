@@ -5,7 +5,7 @@
 #' scores, manage gene panels, and perform various analyses on single-cell datasets.
 #'
 #' @docType package
-#' @name iSensors
+#' @name iSensors-dev
 #' @aliases iSensors-package
 #' @author 
 #' Maxim Rybakov [aut, cre], 

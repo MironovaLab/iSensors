@@ -1,4 +1,4 @@
-Package: iSensors
+Package: iSensors-dev
 Type: Package
 Title: Single-Cell Gene Panel Analysis Package
 Version: 1.2.3
