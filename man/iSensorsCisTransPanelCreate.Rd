@@ -17,7 +17,7 @@ iSensorsCisTransPanelCreate(
 )
 }
 \arguments{
-\item{panel_name}{The name of the panel to create. The function will create a GenePanel object with this name and save it as rda file in the user_panels directory.}
+\item{panel_name}{The name of the panel to create. The panel is saved as \code{iSensors/<panel_name>.rda} in the working directory (the folder is created if needed).}
 
 \item{species}{Name of species for which the trans panel is created.}
 
@@ -34,6 +34,9 @@ iSensorsCisTransPanelCreate(
 \item{panel_type}{Type of panel. Could be cis, UP and DOWN.}
 
 \item{transcriptomes_info}{Information about the used transcriptomes, written by the user.}
+}
+\value{
+The panel, a list of class \code{GenePanel}, invisibly.
 }
 \description{
 The iSensorsCisTransPanelCreate function performs the recognition of binding sites in promoters using positional weight matrices and generates a GenePanel object for a CisTrans type panel. 

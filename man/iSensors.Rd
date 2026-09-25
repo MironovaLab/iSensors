@@ -14,9 +14,9 @@ scores, manage gene panels, and perform various analyses on single-cell datasets
 \code{\link{LoadSensors}}, \code{\link{CalcSensors}}, \code{\link{iSensorsCisTransPanelCreate}}, \code{\link{iSensorsTransPanelCreate}}
 }
 \author{
-Maxim Rybakov [aut, cre], 
+Maxim Rybakov [aut], 
 Elena Zemlyanskaya [aut], 
-Victoria Mironova [aut], 
-Vladislav Dolgikh [aut]
+Vladislav Dolgikh [aut], 
+Victoria Mironova [aut, cre]
 }
 \keyword{package}

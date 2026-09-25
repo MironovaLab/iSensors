@@ -35,20 +35,15 @@ expand_panels_from_additional <- function(exprData, panelsList, additional) {
 }
 
 #' @keywords internal
-iSensor_signal <- function(iSensor_obj, transform = "mean",
-                           normed = FALSE, normBy = "cols") {
+iSensor_signal <- function(iSensor_obj, transform = "mean") {
   # Checks
   if (is.null(iSensor_obj$exprData)) stop("Error: iSensor exprData is empty")
   if (is.null(iSensor_obj$panelSet)) stop("Error: iSensor panelSet is missing")
-  
+
   if (!transform %in% c("mean", "median")) {
     stop("transform must be 'mean' or 'median'")
   }
-  
-  if (!normBy %in% c("cols", "rows")) {
-    stop("normBy must be 'cols' or 'rows'")
-  }
-  
+
   # Panels, including random and meta panels
   panelsList <- iSensor_obj$panelSet$panels
   additional <- iSensor_obj$panelSet$additional
@@ -70,27 +65,13 @@ iSensor_signal <- function(iSensor_obj, transform = "mean",
       return(colMeans(mat))
     }
   }
-  # Signal of one panel in every cell
-  compute_signal <- function(exprData, detectors, method, normed, normBy) {
-    if (normed) {
-      # Known issue, to be resolved in v1.3: dividing a matrix by a vector
-      # recycles the vector down the columns, so with normBy = "cols" each
-      # value is not divided by its own cell's mean/median. The corrected
-      # version (sweep()) is on the iSensors-dev branch.
-      if (method == "mean") {
-        exprData <- if (normBy == "cols") exprData / safe_colMeans(exprData) else exprData / rowMeans(exprData)
-      } else if (method == "median") {
-        median_func <- function(x) median(x[x != 0], na.rm = TRUE)
-        exprData <- if (normBy == "cols") exprData / apply(exprData, 2, median_func) else exprData / apply(exprData, 1, median_func)
-      }
-    }
-    
+  # Signal of one panel in every cell; NULL when too few panel genes are
+  # detected (non-zero variance) to give a reliable score
+  compute_signal <- function(exprData, detectors, method) {
     matchedGenes <- intersect(rownames(exprData), detectors)
+    if (length(matchedGenes) < min_panel_genes) return(NULL)
     filteredMatrix <- exprData[matchedGenes, , drop = FALSE]
-    if (nrow(filteredMatrix) == 1) {
-      filteredMatrix <- t(as.matrix(filteredMatrix))
-    }
-    
+
     if (method == "mean") {
       return(safe_colMeans(filteredMatrix))
     } else {
@@ -102,13 +83,23 @@ iSensor_signal <- function(iSensor_obj, transform = "mean",
   n <- length(panelNames)
   pb <- txtProgressBar(min = 0, max = n, style = 3, width = 50)
   signalList <- lapply(panelNames, function(pName) {
-    res <- compute_signal(iSensor_obj$exprData, panelsList[[pName]], transform, normed, normBy)
+    res <- compute_signal(iSensor_obj$exprData, panelsList[[pName]], transform)
     setTxtProgressBar(pb, which(panelNames == pName))
     return(res)
   })
   close(pb)
   
   names(signalList) <- panelNames
+  skipped <- panelNames[vapply(signalList, is.null, logical(1))]
+  if (length(skipped) > 0) {
+    warning(sprintf("%d panel(s) skipped: fewer than %d of their genes are detected in the data: %s",
+                    length(skipped), min_panel_genes, paste(skipped, collapse = ", ")),
+            call. = FALSE)
+  }
+  signalList <- signalList[!vapply(signalList, is.null, logical(1))]
+  if (length(signalList) == 0) {
+    stop("No panel has at least ", min_panel_genes, " genes detected in the data.", call. = FALSE)
+  }
   signalDF <- as.data.frame(do.call(rbind, signalList))
   signalDF <- as.matrix(signalDF)
   # Meta panels: combine source panel signals with their rule, added as new rows
@@ -129,19 +120,13 @@ iSensor_signal <- function(iSensor_obj, transform = "mean",
     }
   }
   
-  # Signal name, e.g. "mean" or "mean_normed"
-  transformName <- transform
-  if (normed) {
-    transformName <- paste0(transform, "_normed")
-  }
-
-  # Store the signal in the object
+  # Store the signal in the object, named "mean" or "median"
   if (is.null(iSensor_obj$signals)) {
     iSensor_obj$signals <- list()
   }
-  iSensor_obj$signals[[transformName]] <- signalDF
+  iSensor_obj$signals[[transform]] <- signalDF
   iSensor_obj$signals <- iSensor_obj$signals[order(names(iSensor_obj$signals))]
-  
-  message(transformName, " signal was calculated")
+
+  message(transform, " signal was calculated")
   return(iSensor_obj)
 }

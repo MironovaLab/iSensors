@@ -4,12 +4,11 @@ Title: Single-Cell Gene Panel Analysis Package
 Version: 1.3.0
 Authors@R: 
     c(
-      person("Maxim", "Rybakov", email = "m.al.rybakov@gmail.com", role = c("aut", "cre")),
+      person("Maxim", "Rybakov", email = "m.al.rybakov@gmail.com", role = "aut"),
       person("Elena", "Zemlyanskaya", email = "ezemlyanskaya@gmail.com", role = "aut"),
-      person("Victoria", "Mironova", email = "victoria.mironova@ru.nl", role = "aut"),
-      person("Vladislav", "Dolgikh", email = "volleydollmc1@gmail.com", role = "aut")
+      person("Vladislav", "Dolgikh", email = "volleydollmc1@gmail.com", role = "aut"),
+      person("Victoria", "Mironova", email = "victoria.mironova@ru.nl", role = c("aut", "cre"))
     )
-Maintainer: Maxim Rybakov <m.al.rybakov@gmail.com>
 Description: The iSensors package provides tools for analyzing single-cell gene expression data 
     using predefined and custom gene panels. It allows users to compute signaling activity 
     scores, manage gene panels, and perform various analyses on single-cell datasets.
@@ -26,6 +25,7 @@ Imports:
     purrr,
     stringr
 Suggests:
+    testthat,
     universalmotif
 Encoding: UTF-8
 LazyData: true

@@ -7,10 +7,10 @@
 #' @name iSensors
 #' @aliases iSensors-package
 #' @author 
-#' Maxim Rybakov [aut, cre], 
+#' Maxim Rybakov [aut], 
 #' Elena Zemlyanskaya [aut], 
-#' Victoria Mironova [aut], 
-#' Vladislav Dolgikh [aut]
+#' Vladislav Dolgikh [aut], 
+#' Victoria Mironova [aut, cre]
 #' @keywords package
 #' @seealso \code{\link{LoadSensors}}, \code{\link{CalcSensors}}, \code{\link{iSensorsCisTransPanelCreate}}, \code{\link{iSensorsTransPanelCreate}}
 "_PACKAGE"

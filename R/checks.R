@@ -1,3 +1,16 @@
+# Smallest number of genes a panel may have, when created and when scored
+min_panel_genes <- 3L
+
+#' @keywords internal
+check_panel_size <- function(genes, panel_name) {
+  n <- length(unique(genes))
+  if (n < min_panel_genes) {
+    stop(sprintf('Panel "%s" has %d gene(s); a panel needs at least %d genes.',
+                 panel_name, n, min_panel_genes), call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
 #' @keywords internal
 check_iSensorsPanel_obj <- function(panel_obj) {
   
@@ -10,6 +23,7 @@ check_iSensorsPanel_obj <- function(panel_obj) {
   }
   
   check_iSensors_panel(panel_obj$genes)
+  check_panel_size(panel_obj$genes, panel_obj$name)
   return(TRUE)
 }
 
@@ -86,6 +100,10 @@ check_random_info <- function(randomInfo) {
   
   if (!is.numeric(randomInfo$sizes) || length(randomInfo$sizes) != randomInfo$n) {
     stop("`randomInfo$sizes` must be a numeric vector of length equal to `randomInfo$n`.")
+  }
+
+  if (any(randomInfo$sizes < min_panel_genes)) {
+    stop("`randomInfo$sizes` must be at least ", min_panel_genes, " genes each.")
   }
   
   if (!is.logical(randomInfo$majortrend) || length(randomInfo$majortrend) != 1) {

@@ -1,4 +1,9 @@
-# iSensors <img src="https://img.shields.io/badge/R-package-blue" alt="R package" height="24">
+# iSensors <img src="man/figures/logo.png" align="right" width="140" alt="iSensors logo">
+
+<img src="https://img.shields.io/badge/R-package-blue" alt="R package" height="20">
+
+**[Tutorial](https://mironovalab.github.io/isensors-tutorial.html)**: a step-by-step
+analysis with example data, from loading panels to plotting scores.
 
 **iSensors** scores hormone signalling activity in single cells. Each *sensor* is a
 panel of genes that report on one part of a signalling pathway, for example the
@@ -7,7 +12,7 @@ iSensors averages the expression of the panel genes and stores the scores as new
 assays of your Seurat object, ready for `FeaturePlot()`, `VlnPlot()` or
 comparisons between cell types.
 
-The package ships 681 ready-made panels for auxin and cytokinin in *Arabidopsis
+The package ships 676 ready-made panels for auxin and cytokinin in *Arabidopsis
 thaliana*, tomato and 98 other plant species, and lets you build your own.
 
 - [Installation](#installation)
@@ -48,8 +53,8 @@ your R environment file with `usethis::edit_r_environ()` and add the line
 library(iSensors)
 library(Seurat)
 
-# A log-normalised Seurat object, e.g. the test data in tutorial/testData/
-seurat_obj <- readRDS("testDataClean.rds")
+# Your log-normalised Seurat object (the tutorial provides example data)
+seurat_obj <- readRDS("my_seurat_object.rds")
 
 # Arabidopsis auxin panels
 panelSet <- LoadSensors(setName = "ArabidopsisAuxin", species = "ATH", hormone = "aux")
@@ -77,13 +82,17 @@ counts $C$, this is
 
 $$S_{Pj} = \frac{1}{|P|} \sum_{g \in P} \ln\left(1 + \frac{C_{gj}}{\sum_k C_{kj}} \cdot 10^4\right)$$
 
-Genes with zero variance across all cells are left out of *P*.
+Genes with zero variance across all cells are left out of *P*. A panel needs at
+least 3 such genes to be scored; panels with fewer detected genes are skipped with
+a warning that names them.
 
-| `signals` | Score per cell |
-|---|---|
-| `"mean"` | mean of the panel genes |
-| `"median"` | median of the panel genes, ignoring zeros |
-| `"mean_normed"`, `"median_normed"` | the same after dividing expression by the mean or median of each cell (`normBy = "cols"`) or gene (`normBy = "rows"`) |
+| `signals` | Score per cell | Assay |
+|---|---|---|
+| `"mean"` (default) | mean of the panel genes | `iSensors_mean` |
+| `"median"` | median of the panel genes, ignoring zeros | `iSensors_median` |
+
+The `"mean_normed"` and `"median_normed"` signals of earlier versions were removed
+in 1.3.0.
 
 `CalcSensors()` also accepts a genes × cells matrix instead of a Seurat object and
 then returns an `iSensors` object with the scores in `$signals`.
@@ -196,9 +205,13 @@ panelSet <- LoadSensors(
 ## Your own panels
 
 Two functions create panels and save them as `iSensors/<panel_name>.rda` in the
-working directory (the folder is created if needed); the panel is also placed in
-your R session. Load them together with the default panels with
+working directory (the folder is created if needed). They also return the panel
+invisibly, so `panel <- iSensorsTransPanelCreate(...)` keeps a copy in your
+session. Load saved panels together with the default panels with
 `LoadSensors(..., customPanels = TRUE)`.
+
+A panel must contain at least 3 genes; both functions refuse to create a smaller
+one, and `LoadSensors()` refuses to load one.
 
 ### From a gene list: `iSensorsTransPanelCreate()`
 
@@ -324,11 +337,13 @@ A panel is a list of class `GenePanel` with:
 
 ## Tutorial
 
-[`tutorial/tutorial.ipynb`](tutorial/tutorial.ipynb) walks through a full analysis
-of the test dataset in `tutorial/testData/`, from loading panels to plotting
-scores.
+The [iSensors tutorial](https://mironovalab.github.io/isensors-tutorial.html) walks
+through a full analysis of an example dataset, from installing the package and
+loading panels to calculating and plotting scores. Its scripts are in the
+[iSensors-supplementary](https://github.com/MironovaLab/iSensors-supplementary/tree/main/Tutorial-iSensors)
+repository.
 
 ## Authors
 
-Maxim Rybakov (maintainer), Elena Zemlyanskaya, Victoria Mironova and Vladislav
-Dolgikh. Released under the MIT licence.
+Maxim Rybakov, Elena Zemlyanskaya, Vladislav Dolgikh and Victoria Mironova
+([MironovaLab](https://github.com/MironovaLab)). Released under the MIT licence.
