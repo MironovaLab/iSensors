@@ -19,11 +19,11 @@ LoadSensors(
 \arguments{
 \item{setName}{Character. Name for the panel set to use.}
 
-\item{species}{Character vector or NULL. Filter panels by species (e.g. "AT", "SL"). Default NULL (no filtering).}
+\item{species}{Character vector or NULL. Filter panels by species code (e.g. "ATH" for Arabidopsis, "SLY" for tomato). Default NULL (no filtering).}
 
-\item{hormone}{Character vector or NULL. Filter panels by hormone (e.g. "aux", "cyt") category. Default NULL (no filtering).}
+\item{hormone}{Character vector or NULL. Filter panels by hormone code (e.g. "aux" for auxin, "cyt" for cytokinin). Default NULL (no filtering).}
 
-\item{type}{Character vector or NULL. Filter panels by type (e.g. "cis", "trans"). Default NULL (no filtering).}
+\item{type}{Character vector or NULL. Filter panels by type ("cis", "trans" or "reg"). Default NULL (no filtering).}
 
 \item{defaultPanels}{Logical. Whether to include default panels from package data. Default TRUE.}
 
@@ -56,8 +56,8 @@ Meta panels combine multiple existing panels with user-defined aggregation rules
 # Load default panels for Arabidopsis thaliana and auxin hormone
 panelSet <- LoadSensors(
   setName = "ArabidopsisAuxin",
-  species = "AT",
-  hormone = "auxin",
+  species = "ATH",
+  hormone = "aux",
   type = "cis",
   defaultPanels = TRUE,
   customPanels = FALSE,

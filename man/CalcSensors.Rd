@@ -4,18 +4,29 @@
 \alias{CalcSensors}
 \title{Calculate Sensor Signals from Expression Data}
 \usage{
-CalcSensors(data, seurLayer = "data", panelSet, signals = c("mean_normed"))
+CalcSensors(
+  data,
+  seurLayer = "data",
+  panelSet,
+  signals = c("mean_normed"),
+  normBy = "cols"
+)
 }
 \arguments{
-\item{data}{A \code{Seurat} object or numeric expression matrix (genes x samples).}
+\item{data}{A \code{Seurat} object or numeric expression matrix (genes x cells).}
 
-\item{seurLayer}{Character. Assay layer name to extract data from Seurat object (e.g., "RNA"). Default "RNA".}
+\item{seurLayer}{Character. Layer of the default assay of a Seurat object to
+read expression from. Default \code{"data"} (log-normalised expression).}
 
-\item{panelSet}{An \code{iSensorsPanelSet} object containing gene panels to calculate signals for.}
+\item{panelSet}{An \code{iSensorsPanelSet} object containing gene panels to calculate signals for,
+see \code{\link{LoadSensors}}.}
 
 \item{signals}{Character vector. Types of signals to compute. Allowed values:
 \code{"mean"}, \code{"mean_normed"}, \code{"median"}, \code{"median_normed"}.
 Default is \code{"mean_normed"}.}
+
+\item{normBy}{Character. For the \code{"_normed"} signals, divide expression by the
+mean or median of each cell (\code{"cols"}, default) or of each gene (\code{"rows"}).}
 }
 \value{
 If input is a Seurat object, returns the same Seurat object with added assays for each signal.
@@ -28,8 +39,9 @@ summary signals including mean, median, and their normalized versions.
 }
 \details{
 The function computes sensor signals for each gene panel by summarizing gene expression values
-across panel genes in each sample or cell. Normalization is done by dividing gene expression by
-the mean or median expression per sample or gene, depending on the signal type.
+across panel genes in each cell. Genes with zero variance across all cells are left out.
+Normalization is done by dividing gene expression by the mean or median expression per cell
+or gene, depending on \code{normBy}.
 
 Signals are stored in assays within Seurat objects named as \code{"iSensors_<signal>"},
 e.g. \code{iSensors_mean_normed}.
@@ -38,21 +50,19 @@ e.g. \code{iSensors_mean_normed}.
 \dontrun{
 library(Seurat)
 
-# Using Seurat object
-seurat_obj <- Read10X(data.dir = "path/to/data")
-seurat_obj <- CreateSeuratObject(counts = seurat_obj)
-panelSet <- LoadSensors(setName = "ArabidopsisAuxin")
+# Using a Seurat object
+seurat_obj <- CreateSeuratObject(counts = Read10X(data.dir = "path/to/data"))
+seurat_obj <- NormalizeData(seurat_obj)
+panelSet <- LoadSensors(setName = "ArabidopsisAuxin", species = "ATH", hormone = "aux")
 
-seurat_obj <- CalcSensors(seurat_obj, seurLayer = "RNA", panelSet = panelSet,
-                          signals = c("mean_normed", "median"))
+seurat_obj <- CalcSensors(seurat_obj, panelSet = panelSet, signals = c("mean", "median"))
 
 # Access sensor signal assay
-head(seurat_obj@assays$iSensors_mean_normed@counts)
+head(GetAssayData(seurat_obj, assay = "iSensors_mean", layer = "counts"))
 
-# Using raw matrix
-expr_mat <- as.matrix(GetAssayData(seurat_obj, slot = "counts"))
-iSensor_obj <- CalcSensors(expr_mat, panelSet = panelSet,
-                           signals = c("mean", "median_normed"))
+# Using an expression matrix
+expr_mat <- as.matrix(GetAssayData(seurat_obj, assay = "RNA", layer = "data"))
+iSensor_obj <- CalcSensors(expr_mat, panelSet = panelSet, signals = "mean")
 }
 
 }

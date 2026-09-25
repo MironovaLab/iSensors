@@ -3,7 +3,6 @@ load_panel_from_rda <- function(file_path) {
   panelEnv <- new.env()
   load(file_path, envir = panelEnv)
   panelName <- ls(envir = panelEnv)
-  # print(panelName)
   if (length(panelName) != 1) {
     warning("Expected one object per panel file, got: ", paste(panelName, collapse = ", "))
   }
@@ -26,7 +25,7 @@ filter_and_load_panels <- function(panelsDir, species = NULL, hormone = NULL, ty
   panelsFiles <- list.files(path = panelsDir, pattern = '\\.rda$', full.names = FALSE)
   
   if (filter) {
-    # previous '_'
+    # Panel files are named species-hormone-type-name.rda, e.g. ATH-aux-trans-ARF.rda
     name_delim <- '-'
     firstThreeParts <- lapply(strsplit(panelsFiles, name_delim), function(x) head(x, 3))
     all_species  <- unique(sapply(firstThreeParts, function(x) x[1]))
@@ -66,9 +65,9 @@ filter_and_load_panels <- function(panelsDir, species = NULL, hormone = NULL, ty
 #' and meta panels with custom aggregation rules.
 #'
 #' @param setName Character. Name for the panel set to use.
-#' @param species Character vector or NULL. Filter panels by species (e.g. "AT", "SL"). Default NULL (no filtering).
-#' @param hormone Character vector or NULL. Filter panels by hormone (e.g. "aux", "cyt") category. Default NULL (no filtering).
-#' @param type Character vector or NULL. Filter panels by type (e.g. "cis", "trans"). Default NULL (no filtering).
+#' @param species Character vector or NULL. Filter panels by species code (e.g. "ATH" for Arabidopsis, "SLY" for tomato). Default NULL (no filtering).
+#' @param hormone Character vector or NULL. Filter panels by hormone code (e.g. "aux" for auxin, "cyt" for cytokinin). Default NULL (no filtering).
+#' @param type Character vector or NULL. Filter panels by type ("cis", "trans" or "reg"). Default NULL (no filtering).
 #' @param defaultPanels Logical. Whether to include default panels from package data. Default TRUE.
 #' @param customPanels Logical. Whether to include custom panels from a local "iSensors/" folder. Default FALSE.
 #' @param random Logical. Whether to add random gene panels automatically. Default TRUE.
@@ -90,8 +89,8 @@ filter_and_load_panels <- function(panelsDir, species = NULL, hormone = NULL, ty
 #' # Load default panels for Arabidopsis thaliana and auxin hormone
 #' panelSet <- LoadSensors(
 #'   setName = "ArabidopsisAuxin",
-#'   species = "AT",
-#'   hormone = "auxin",
+#'   species = "ATH",
+#'   hormone = "aux",
 #'   type = "cis",
 #'   defaultPanels = TRUE,
 #'   customPanels = FALSE,
@@ -136,16 +135,16 @@ LoadSensors <- function(setName, species = NULL, hormone = NULL, type = NULL,
     }
   }
   
-  # Создание additional
+  # Random and meta panels ("additional")
   additional <- list()
   
   if (isTRUE(random)) {
-    # Пользователь запросил рандомы по умолчанию
+    # Default random panels
     additional$random <- list(n = 2, sizes = c(200, 500), majortrend = TRUE)
   }
   
   if (!is.null(randomInfo)) {
-    # Пользователь указал собственные настройки
+    # User-defined random panels
     check_random_info(randomInfo)
     additional$random <- randomInfo
   }

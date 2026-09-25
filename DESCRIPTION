@@ -1,7 +1,7 @@
 Package: iSensors
 Type: Package
 Title: Single-Cell Gene Panel Analysis Package
-Version: 1.2.3
+Version: 1.3.0
 Authors@R: 
     c(
       person("Maxim", "Rybakov", email = "m.al.rybakov@gmail.com", role = c("aut", "cre")),
@@ -29,4 +29,4 @@ Suggests:
     universalmotif
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.3

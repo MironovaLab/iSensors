@@ -1,536 +1,334 @@
 # iSensors <img src="https://img.shields.io/badge/R-package-blue" alt="R package" height="24">
 
-## Table of Contents
-- [Dependencies](#dependencies)
-- [iSensors installation](#isensors-installation)
-- [iSensors documentation](#isensors-documentation)
-- [Quick Start](#quick-start)
+**iSensors** scores hormone signalling activity in single cells. Each *sensor* is a
+panel of genes that report on one part of a signalling pathway, for example the
+auxin response factors, auxin transport or cytokinin biosynthesis. For every cell,
+iSensors averages the expression of the panel genes and stores the scores as new
+assays of your Seurat object, ready for `FeaturePlot()`, `VlnPlot()` or
+comparisons between cell types.
 
-**iSensors** is a package for analyzing signaling activity scores of gene panels based on single-cell RNA-seq data stored in Seurat objects. The package allows you to compute signaling activity scores for specified gene panels and store the results as new assays.
+The package ships 681 ready-made panels for auxin and cytokinin in *Arabidopsis
+thaliana*, tomato and 98 other plant species, and lets you build your own.
 
-## Dependencies
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [How the scores are calculated](#how-the-scores-are-calculated)
+- [Available panels](#available-panels)
+- [Random and meta panels](#random-and-meta-panels)
+- [Your own panels](#your-own-panels)
+- [Tutorial](#tutorial)
 
-The **iSensors** package depends on the following R packages:
+## Installation
 
-- [Seurat](https://cran.r-project.org/package=Seurat) – core infrastructure for single-cell data.
-- [Matrix](https://cran.r-project.org/package=Matrix) – sparse matrix operations.
-- [stats] and [methods] – base R packages.
-- [utils] – base R package.
+iSensors needs two Bioconductor packages, installed once:
 
-Additionally, iSensors makes use of:
-
-- [dplyr](https://cran.r-project.org/package=dplyr) – data manipulation.
-- [magrittr](https://cran.r-project.org/package=magrittr) – piping (`%>%`).
-- [purrr](https://cran.r-project.org/package=purrr) – functional programming tools.
-- [stringr](https://cran.r-project.org/package=stringr) – string processing.
-- [Biostrings](https://bioconductor.org/packages/Biostrings) – biological string operations.
-- [universalmotif](https://bioconductor.org/packages/universalmotif) – motif representation and analysis.
-
-The second set of packages is set to “manually installed”. Use the following commands for installation:
-```
-install.packages('stringr')
-install.packages('magrittr')
-install.packages('dplyr')
-
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-BiocManager::install("Biostrings")
+```r
+install.packages("BiocManager")
+BiocManager::install(c("Biostrings", "universalmotif"))
 ```
 
-## iSensors installation
+Then install iSensors from GitHub:
 
-You can install the package from GitHub using `devtools`:
-
-```R
-# Make sure you have devtools installed
+```r
 install.packages("devtools")
-
-# Install the iSensor package from main
 devtools::install_github("MironovaLab/iSensors")
-# or from other branch
-devtools::install_github("MironovaLab/iSensors", ref = "iSensors-dev")
 ```
-In case dealing with a mistake like:
-```
-Failed to install 'unknown package' from GitHub
-```
-You need to go to GitHub Settings -> Developer Settings and generate your token.
-Run
-```
-usethis::edit_r_environ()
-```
-and copy your token to the GITHUB_PAT= your token/
 
-[↑ Back to top](#table-of-contents)
+To try a development version, name its branch, e.g.
+`install_github("MironovaLab/iSensors", ref = "iSensors-dev")`.
 
-## iSensors documentation
+If GitHub refuses the download (`Failed to install 'unknown package' from GitHub`),
+create a personal access token under GitHub *Settings → Developer settings*, open
+your R environment file with `usethis::edit_r_environ()` and add the line
+`GITHUB_PAT=<your token>`.
 
-<details>
-<summary>Panels doc: default panels</summary>
+## Quick start
 
-### Default panel description
-- The default gene panels include three types:
-  - **cis-sensors**, built from genes containing auxin-responsive cis-regulatory motifs
-  - **trans-sensors**, built from genes involved in auxin-regulated processes
-  - **reg-sensors**, combining both criteria (cistrans-sensors)
-- A meta panel is a derived panel that does not directly correspond to a predefined list of genes. Instead, it is constructed by combining the results of several existing panels using a user-defined aggregation rule.
-  - Source panels: the set of real gene panels whose signals will be combined.
-  - Rule: a function that defines how to aggregate the signals of the source panels (for example, mean, sum, product, or a custom function).
-    
-  The output of a meta panel is therefore a vector of sensor values (one value per cell/sample), generated according to the chosen rule.
-- Default panels for Arabidopsis thaliana (cis-, trans-, and reg-types for auxin and cytokinin) and Solanum lycopersicum (cis-type for auxin) are available
-
-[↑ Back to top](#table-of-contents)
-
-</details>
-
-<details>
-<summary>Function doc: LoadSensors()</summary>
-
-### LoadSensors Description
-Loads gene sensor panels from default package data and optionally from custom directories,
-allowing filtering by species, hormone, and panel type. Supports adding random gene panels
-and meta panels with custom aggregation rules.
-
-### LoadSensors Usage
 ```r
-LoadSensors(setName,
-            species = NULL,
-            hormone = NULL,
-            type = NULL,
-            defaultPanels = TRUE,
-            customPanels = FALSE,
-            random = TRUE,
-            randomInfo = NULL,
-            metaPanels = NULL)
-```
-
-### LoadSensors Arguments
-- **setName**: Character. A selected by user name that will be used for panel set object.  
-- **species**: Character vector or NULL. Filter panels by species ("AT" for Arabidopsis thaliana and "SL" for Solanum lycopersicum). Default NULL. Used only for reading default panels.
-- **hormone**: Character vector or NULL. Filter panels by hormone category ("aux" for auxin and "cyt" for cytokinin). Default NULL. Used only for reading default panels. 
-- **type**: Character vector or NULL. Filter panels by type ("cis" for cis-panels, "trans" for trans-panels, “cistrans” for reg-panels). Default NULL. Used only for reading default panels.
-- **defaultPanels**: Logical. Include default panels from package data. Default TRUE.  
-- **customPanels**: Logical. Include custom panels from a local "iSensors/" folder. Default FALSE.  
-- **random**: Logical. Add random gene panels automatically. Default TRUE.  
-- **randomInfo**: List or NULL. Custom settings for random gene panels; must contain fields `n`, `sizes`, `majortrend`. Overrides `random` if provided.  
-- **metaPanels**: List or NULL. Meta panels with custom aggregation rules. Each element must contain `srcPanels` (character vector) и `rule` (function).
-
-### LoadSensors Details
-The function loads gene sensor panels stored as `.rda` files under the package's `extdata/geneSensors` folder,
-filtering files by species, hormone, and type when specified. Custom panels can be loaded from a folder named `iSensors`
-in the working directory.  
-Random panels are generated by sampling gene names from the expression dataset, useful for statistical control.  
-Meta panels combine multiple existing panels with user-defined aggregation rules.
-
-### LoadSensors Value
-An object of class `iSensorsPanelSet`, a list containing the loaded panels and additional metadata.
-
-### LoadSensors Examples
-```r
-# Load default panels for Arabidopsis thaliana and auxin hormone
-panelSet <- LoadSensors(
-  setName = "ArabidopsisAuxin",
-  species = "AT",
-  hormone = "aux",
-  type = "cis"
-)
-
-# Load panels including custom user panels and meta panels
-metaPanels <- list(
-  combined = list(
-    srcPanels = c("panel1", "panel2"),
-    rule = prod
-  )
-)
-
-panelSet2 <- LoadSensors(
-  setName = "CustomSet",
-  defaultPanels = FALSE,
-  customPanels = TRUE,
-  randomInfo = list(n = 3, sizes = c(100,200,300), majortrend = TRUE),
-  metaPanels = metaPanels
-)
-```
-[↑ Back to top](#table-of-contents)
-
-</details>
-
-<details>
-<summary>Function doc: CalcSensors()</summary>
-
-### CalcSensors Description
-Computes sensor signals based on predefined gene panels from expression data.
-Supports input as Seurat objects or raw expression matrices, and calculates multiple
-summary signals including mean, median, and their normalized versions.
-
-### CalcSensors Usage
-```r
-CalcSensors(data,
-            seurLayer = "data",
-            panelSet,
-            signals = "mean_normed")
-```
-
-### CalcSensors Arguments
-- **data**: A `Seurat` object or numeric expression matrix (genes x samples).  
-- **seurLayer**: Character. Assay layer name to extract data from Seurat object (e.g., "data", "counts"). Default "data".  
-- **panelSet**: An `iSensorsPanelSet` object containing gene panels to calculate signals for.  
-- **signals**: Character vector. Types of signals to compute. Allowed values: `"mean"`, `"mean_normed"`, `"median"`, `"median_normed"`. Default `"mean_normed"`.
-
-### CalcSensors Details
-The function computes sensor signals for each gene panel by summarizing gene expression values
-across panel genes in each sample or cell. Normalization is done by dividing gene expression by
-the mean or median expression per sample or gene, depending on the signal type.
-
-Signals are stored in assays within Seurat objects named as `iSensors_<signal>`,
-e.g. `iSensors_mean_normed`.
-
-### CalcSensors Value
-- If input is a Seurat object: returns the same Seurat object with added assays for each signal.  
-- If input is a numeric matrix: returns an `iSensors` object with calculated signals.
-
-### CalcSensors Examples
-```r
+library(iSensors)
 library(Seurat)
 
-# Using Seurat object
-seurat_obj <- Read10X(data.dir = "path/to/data")
-seurat_obj <- CreateSeuratObject(counts = seurat_obj)
-panelSet <- LoadSensors(setName = "ArabidopsisAuxin")
+# A log-normalised Seurat object, e.g. the test data in tutorial/testData/
+seurat_obj <- readRDS("testDataClean.rds")
 
-seurat_obj <- CalcSensors(seurat_obj, seurLayer = "RNA", panelSet = panelSet,
-                          signals = c("mean_normed", "median"))
+# Arabidopsis auxin panels
+panelSet <- LoadSensors(setName = "ArabidopsisAuxin", species = "ATH", hormone = "aux")
 
-# Access sensor signal assay
-head(seurat_obj@assays$iSensors_mean_normed@counts)
+# One score per panel and cell, added as the assay "iSensors_mean"
+seurat_obj <- CalcSensors(seurat_obj, panelSet = panelSet, signals = "mean")
 
-# Using raw matrix
-expr_mat <- as.matrix(GetAssayData(seurat_obj, slot = "counts"))
-iSensor_obj <- CalcSensors(expr_mat, panelSet = panelSet,
-                           signals = c("mean", "median_normed"))
+DefaultAssay(seurat_obj) <- "iSensors_mean"
+FeaturePlot(seurat_obj, features = "ATH-aux-trans-ARF")
 ```
-[↑ Back to top](#table-of-contents)
+
+Each panel becomes one feature of the new assay, named like its panel file.
+
+## How the scores are calculated
+
+`CalcSensors()` reads the `data` layer of the default assay (change it with
+`seurLayer`). For the `"mean"` signal the score of panel *P* in cell *j* is the
+mean expression of the panel genes:
+
+$$S_{Pj} = \frac{1}{|P|} \sum_{g \in P} x_{gj}$$
+
+With Seurat's standard log-normalisation (`NormalizeData()`, scale factor 10,000),
+where $x_{gj} = \ln\left(1 + 10^4 \, C_{gj} / \sum_k C_{kj}\right)$ for the raw
+counts $C$, this is
+
+$$S_{Pj} = \frac{1}{|P|} \sum_{g \in P} \ln\left(1 + \frac{C_{gj}}{\sum_k C_{kj}} \cdot 10^4\right)$$
+
+Genes with zero variance across all cells are left out of *P*.
+
+| `signals` | Score per cell |
+|---|---|
+| `"mean"` | mean of the panel genes |
+| `"median"` | median of the panel genes, ignoring zeros |
+| `"mean_normed"`, `"median_normed"` | the same after dividing expression by the mean or median of each cell (`normBy = "cols"`) or gene (`normBy = "rows"`) |
+
+`CalcSensors()` also accepts a genes × cells matrix instead of a Seurat object and
+then returns an `iSensors` object with the scores in `$signals`.
+
+## Available panels
+
+Panel files are named `species-hormone-type-name`, for example
+`ATH-aux-trans-ARF`. `LoadSensors()` filters on the first three parts:
+
+| Filter | Values |
+|---|---|
+| `species` | species code, e.g. `ATH` (*Arabidopsis thaliana*), `SLY` (tomato), `OSA` (rice), `ZMA` (maize) |
+| `hormone` | `aux` (auxin), `cyt` (cytokinin) |
+| `type` | `trans`, `cis` or `reg` |
+
+The three panel types:
+
+- **trans**: genes of one part of the pathway, e.g. all ARF transcription factors
+  or all auxin transporters.
+- **cis**: genes whose promoters contain the binding site of a response factor,
+  e.g. DR5 or IR8 sites recognised by ARF1.
+- **reg**: cis genes that are also up- or down-regulated by the hormone in
+  transcriptome experiments (suffix `-up` or `-down`).
+
+| Species | Hormone | trans | cis | reg |
+|---|---|---:|---:|---:|
+| *Arabidopsis thaliana* (`ATH`) | auxin | 8 | 17 | 32 |
+| *Arabidopsis thaliana* (`ATH`) | cytokinin | 4 | 10 | 20 |
+| *Solanum lycopersicum* (`SLY`) | auxin | 6 | 18 | – |
+| 98 other species | auxin | 6 each* | – | – |
+
+\*ARF, IAA, PAT, receptors, synthesis and transport, where the gene family is
+annotated for the species.
+
+Arabidopsis trans panels: auxin `A-ARF`, `ARF`, `ConjugationDeconjugation`, `IAA`,
+`PolarAuxinTransport`, `Receptors`, `Synthesis`, `Transport`; cytokinin `A-ARR`,
+`B-ARR`, `Receptors`, `Synthesis`.
+
+```r
+ListSensorPanels()                          # all panel files
+InspectSensorPanel("ATH-aux-trans-ARF.rda") # genes and metadata of one panel
+```
+
+<details>
+<summary>All species codes</summary>
+
+AAG *Anthoceros agrestis* · AAR *Aethionema arabicum* · ACERTR *Acer truncatum* ·
+ACH *Actinidia chinensis* · ALY *Arabidopsis lyrata* · AMA *Avicennia marina* ·
+AMHYB *Amaranthus hybridus* · AOX *Aquilegia oxysepala* · ARHY *Arachis hypogaea* ·
+ATH *Arabidopsis thaliana* · ATR *Amborella trichopoda* · BCA *Brassica carinata* ·
+BNA *Brassica napus* · BOL *Brassica oleracea* · BRA *Brassica rapa* ·
+BVU *Beta vulgaris* · CAMSI *Camellia sinensis* · CAN *Capsicum annuum* ·
+CANSAT *Cannabis sativa* · CAR *Cicer arietinum* · CAV *Corylus avellana* ·
+CBR *Chara braunii* · CCAN *Coffea canephora* · CCL *Citrus clementina* ·
+CDE *Ceratophyllum demersum* · CFA *Carpinus fangiana* · CHI *Cardamine hirsuta* ·
+CIL *Carya illinoinensis* · CLA *Citrullus lanatus* · CME *Cucumis melo* ·
+COL *Corchorus olitorius* · CPA *Carica papaya* · CQU *Chenopodium quinoa* ·
+CRE *Chlamydomonas reinhardtii* · CRU *Capsella rubella* · CSA *Cucumis sativus* ·
+DCA *Daucus carota* · DIN *Davidia involucrata* · DZI *Durio zibethinus* ·
+ECA *Erigeron canadensis* · EGR *Eucalyptus grandis* · EGUT *Erythranthe guttata* ·
+ESA *Eutrema salsugineum* · FAN *Fragaria × ananassa* · FVE *Fragaria vesca* ·
+GHI *Gossypium hirsutum* · GMA *Glycine max* · GRA *Gossypium raimondii* ·
+HAN *Helianthus annuus* · HMA *Hydrangea macrophylla* · LAL *Lupinus albus* ·
+LJA *Lotus japonicus* · LONJA *Lonicera japonica* · LSA *Lactuca sativa* ·
+MBI *Magnolia biondii* · MCO *Micromonas commoda* · MDO *Malus domestica* ·
+MES *Manihot esculenta* · MPO *Marchantia polymorpha* · MTR *Medicago truncatula* ·
+NNU *Nelumbo nucifera* · NTA *Nicotiana tabacum* · OEU *Olea europaea* ·
+OSA *Oryza sativa* · PAX *Petunia axillaris* · PCO *Prasinoderma coloniale* ·
+PGR *Punica granatum* · PPA *Physcomitrium patens* · PPE *Prunus persica* ·
+PSA *Pisum sativum* · PSO *Papaver somniferum* · PTR *Populus trichocarpa* ·
+PVU *Phaseolus vulgaris* · QLO *Quercus lobata* · RCH *Rosa chinensis* ·
+RSI *Rhododendron simsii* · SAS *Striga asiatica* · SBO *Salvia bowleyana* ·
+SBR *Salix brachista* · SCI *Simmondsia chinensis* · SED *Sechium edule* ·
+SGI *Sequoiadendron giganteum* · SHI *Sapria himalayana* · SLY *Solanum lycopersicum* ·
+SMO *Selaginella moellendorffii* · SPA *Schrenkiella parvula* · SPE *Solanum pennellii* ·
+STU *Solanum tuberosum* · SUN *Selenicereus undatus* · TAR *Trochodendron aralioides* ·
+TCA *Theobroma cacao* · THA *Tarenaya hassleriana* · TPR *Trifolium pratense* ·
+TWI *Tripterygium wilfordii* · UGI *Utricularia gibba* · VMA *Vaccinium macrocarpon* ·
+VMU *Vigna mungo* · VPL *Vanilla planifolia* · VVI *Vitis vinifera* · ZMA *Zea mays*
 
 </details>
 
+## Random and meta panels
+
+By default `LoadSensors()` adds control panels: two panels of 200 and 500 randomly
+chosen genes (`random1`, `random2`) and `majortrend`, the mean of all genes. Set
+your own with `randomInfo`, or turn them off with `random = FALSE`:
+
+```r
+panelSet <- LoadSensors(setName = "ArabidopsisAuxin", species = "ATH", hormone = "aux",
+                        randomInfo = list(n = 3, sizes = c(100, 200, 300), majortrend = TRUE))
+```
+
+Random panels are drawn when the scores are calculated; call `set.seed()` before
+`CalcSensors()` for reproducible controls.
+
+A **meta panel** combines the scores of existing panels with a function of your
+choice:
+
+```r
+panelSet <- LoadSensors(
+  setName = "ArabidopsisAuxin", species = "ATH", hormone = "aux",
+  metaPanels = list(
+    DR5_ARF1_ARF5 = list(srcPanels = c("ATH-aux-cis-DR5-ARF1", "ATH-aux-cis-DR5-ARF5-1"),
+                         rule = mean)
+  )
+)
+```
+
+## Your own panels
+
+Two functions create panels and save them as `iSensors/<panel_name>.rda` in the
+working directory (the folder is created if needed); the panel is also placed in
+your R session. Load them together with the default panels with
+`LoadSensors(..., customPanels = TRUE)`.
+
+### From a gene list: `iSensorsTransPanelCreate()`
+
+```r
+iSensorsTransPanelCreate(panel_name = "ATH-aux-trans-myPanel",
+                         gene_list = c("AT1G01010", "AT1G01030", "AT1G01040"),
+                         species = "Arabidopsis thaliana",
+                         panel_description = "Three genes of interest")
+```
+
+| Argument | Description |
+|---|---|
+| `panel_name` | Name of the panel and its file. Follow the `species-hormone-type-name` scheme to make the filters work. |
+| `gene_list` | Gene IDs as a vector or a `.txt` file with one ID per line. |
+| `species` | Species name, stored in the panel metadata. |
+| `trivial_names_file` | Optional tab-separated file with gene ID, short name and full name. |
+| `panel_description` | Free-text description. |
+
 <details>
-<summary>Function doc: iSensorsTransPanelCreate()</summary>
+<summary>File formats</summary>
 
-### iSensorsTransPanelCreate Introduction
+Gene list, one ID per line:
 
-The **iSensorsTransPanelCreate** function generates an object for a trans-type gene panel compatible with iSensors R package.
-
-The function receives a list of gene IDs as input (either as a vector or as a txt file), and the the corresponding trivial gene names in txt format (optional).
-
-The function generates a list of three items. The first is a list **genes** containing gene IDs. The second is a data frame **gene_metadata** containing gene IDs and the corresponding short and full gene names. The third is a data frame **panel_metadata** containing the information about the species, gene panel type, gene panel description, creation date. The function writes the panel to an object in the current environment and saves it as an rda file in the current working directory.
-
-### iSensorsTransPanelCreate Usage
-
-#### Parameters of function
-
-| Parameter | Description |
-| ----------- | ----------- |
-| panel_name | The name of the panel to create. The function will create an object with this name in the current environment and save the rda file with this name in the current working directory. |
-| gene_list | List of genes. Can be supplied as a vector `c('AT1G01010', 'AT1G01030', 'AT1G01040')`, or as a .txt file.   |
-| species | Name of species for which the trans panel is created.|
-| trivial_names_file | List of trivial gene names as a .txt file. (optional) |
-| panel_description    | Description of the panel in natural language.|
-
-#### Gene list TXT-file format
-
- ```
+```
 AT1G01010
 AT1G01030
 AT1G01040
 ```
-#### Trivial names list TXT-file format
 
-Tab should be used as a delimiter
+Trivial names, tab-separated:
 
-| gene | gene_name | gene_trivial_name |
-| ----------- | ----------- | ----------- |
-|AT1G01010 | NAC001 | NAC domain containing protein 1 |
-|AT1G01020 | ARV1 | none |
-|AT1G01030 | NGA3 | NGATHA3 |
-
-#### iSensor panel object
-
-This is an example of panel with two genes 
-
-- *genes*
-
-`  "AT1G01020" "AT1G01060" `
-
-- *gene_metadata*
-
-| GeneID | GeneName | GeneFullName |
-| ---- | ---------- | --------------|
-| AT1G01020 |ARV1|  none| 
-AT1G01060| LHY | LATE ELONGATED HYPOCOTYL |
-
-- *panel_metadata*
-
-| Species | PanelType | PanelDescription | DateCreated |
-| ---- | ---------- | --------------|----|
-| Arabidopsis thaliana | trans | This is an example of panel with two genes | 2025-06-20 |
-
-#### iSensorsTransPanelCreate Usage examples
-
-- *Arabidopsis thaliana*, input as vector.
-
-` iSensorsTransPanelCreate(panel_name = 'trans_panel', gene_list = c('AT1G01010', 'AT1G01030', 'AT1G01040'), species = 'Arabidopsis thaliana', panel_description = 'This is an example of trans panel') `
-
-- *Arabidopsis thaliana*, input as txt-file.
-
-` iSensorsTransPanelCreate(panel_name = 'trans_panel' ,gene_list = 'gene_list.txt', species = 'Arabidopsis thaliana', panel_description = 'This is an example of trans panel') `
-
-- *Arabidopsis thaliana*, input as txt-file, with trivial names list.
-
-` iSensorsTransPanelCreate(panel_name = 'trans_panel', gene_list = 'gene_list.txt', species = 'Arabidopsis thaliana', trivial_names_file = 'Arabidopsis_trivial_names_example.txt', panel_description = 'This is an example of trans panel') `
-
-### iSensorsTransPanelCreate Output
-
-The function creates an object of the **GenePanel** class and writes it to an ***rda*** file with the name specified in the panel_name variable. The function saves the ***rda*** file to the **iSensors** subdirectory in the working directory. If the working directory does not have an **iSensors** subdirectory, the function creates it. The function does NOT save the **GenePanel** object to the working environment in R.
-
-[↑ Back to top](#table-of-contents)
+```
+AT1G01010	NAC001	NAC domain containing protein 1
+AT1G01020	ARV1	none
+AT1G01030	NGA3	NGATHA3
+```
 
 </details>
+
+### From a binding-site motif: `iSensorsCisTransPanelCreate()`
+
+Scans promoters with a position weight matrix and keeps genes with a binding site
+(`panel_type = "cis"`), optionally only those up- or down-regulated in
+transcriptome experiments (`panel_type = "UP"` or `"DOWN"`).
+
+```r
+# cis panel
+iSensorsCisTransPanelCreate(panel_name = "ATH-aux-cis-myMotif",
+                            species = "Arabidopsis thaliana",
+                            promoters_set = "At_TAIR10_promoters.fas",
+                            ppm = "ARF1.txt",
+                            panel_type = "cis",
+                            trivial_names_file = "at_trivial.txt")
+
+# genes with the site that are up-regulated in at least one experiment
+iSensorsCisTransPanelCreate(panel_name = "ATH-aux-reg-myMotif-up",
+                            species = "Arabidopsis thaliana",
+                            promoters_set = "At_TAIR10_promoters.fas",
+                            ppm = "ARF1.txt",
+                            deg_list = "auxin_degs.txt",
+                            min_dataset_number = 1,
+                            panel_type = "UP",
+                            transcriptomes_info = "Auxin 1h, auxin 4h")
+```
+
+| Argument | Description |
+|---|---|
+| `panel_name`, `species` | As above. |
+| `promoters_set` | FASTA file of promoter sequences. |
+| `ppm` | Position probability matrix in Homer format. |
+| `panel_type` | `"cis"`, `"UP"` or `"DOWN"`. |
+| `deg_list` | Table of log2 fold changes and adjusted p-values per experiment (for `"UP"`/`"DOWN"`). |
+| `min_dataset_number` | Number of experiments in which a gene must be differentially expressed (adjusted p < 0.05). |
+| `trivial_names_file` | Optional, as above. |
+| `transcriptomes_info` | Free-text description of the experiments. |
 
 <details>
+<summary>File formats</summary>
 
-<summary>Function doc: iSensorsCisTransPanelCreate()</summary>
+**Promoters (FASTA).** One sequence per promoter. The header holds, separated by
+`-`: gene ID, strand (`1` forward, `0` reverse), chromosome, promoter start and
+end coordinates.
 
-### iSensorsCisTransPanelCreate Introduction
-
-The **iSensorsCisTransPanelCreate** function performs the recognition of binding sites in promoters using positional weight matrices and generates an object for a cis-trans type panel, if the recognition is limited to differentially expressed genes, and cis-trans type gene panel if not. Format for cis/cis-trans panels is compatible with iSensors R package.
-
-The function receives (1) a set of promoters in FASTA format, (2) a positional probability matrix in Homer format, (3) a list of RNA-seq experiments with logFC and adjusted p-values for each gene (optional) and (4) the the corresponding trivial gene names in txt format (optional).
-
-The function generates a list of three items. The first is a list **genes** containing gene IDs. The second is a data frame **gene_metadata** containing gene IDs, recognized sites, coordinates of each site in the genome, location (forward or reverse strand) and distance of each site relative to the TSS, and the corresponding short and full gene names. The third is a data frame **panel_metadata** containing the information about the species, gene panel type, gene panel description, creation date. 
-The function writes the panel to an object in the current environment and saves it as an rda file in the current working directory.
-
-Usage
-------
-
-#### Parameters of function
-
-| Parameter | Description |
-| ----------- | ----------- |
-| panel_name | The name of the panel to create. The function will create an object with this name in the current environment and save the rda file with this name in the current working directory. |
-| species | Name of species for which the trans panel is created.|
-| promoters_set | Path to a FASTA file containing promoter sequences. For the header structure, see *Promoters set format*|
-| ppm | Path to a positional probability matrix file in Homer format. For the description of format, see *PPM format* |
-| deg_list | Path to a file containing logFC and adjusted p-value information obtained from a set of transcriptomic experiments that determine the differential expression status of a gene. For the description of format, see *DEG list format* |
-| min_dataset_number | The minimum number of transcriptomics experiments in which a gene is differentially expressed to be considered differentially expressed in the cis-trans panel. For example, if `min_dataset_number = 1`, then a gene must be differentially expressed in at least one experiment to be considered differentially expressed in the cis-trans panel. |
-| trivial_names_file | List of trivial gene names as a .txt file. (optional) |
-| panel_type | Type of panel. Could be `cis`, `UP` and `DOWN`. |
-|  transcriptomes_info | Information about the used transcriptomes, written by the user in free form in natural language.|
-
-#### Promoters set format
-
-The function should receive a set of promoters as a **FASTA** file. Each individual promoter must be a separate sequence in the file. The header *must* contain the following information, separated by the `-` sign:
-
-- Gene ID;
-- Gene orientation: 1 if gene is located on forward strand, 0 if gene is located on reverse strand;
-- Chromosome;
-- Promoter absolute start coordinate;
-- Promoter absolute end coordinate.
-
-##### Example of promoter in promoters set
-
- ```
+```
 >AT1G01010-1-1-2130-3630
-AACATTTCAAACCACTTGTTCTCTTTTATGTTTTGGTAAGAGCTATCTTCTAAATTTATAATACGCATAAATTCAAAAGTAAAAGAAAATTTTGGTCATGAATGTTGTTTAAGTCATTTGGAGATACGAAATCAAATCTCCTTGTAGATTTTGTTTTTAGAATGTCGTTCCTTTTTCATCATCTTAGCTATATCTACAGCTATATATCCTATCTTTAAACCTATATTATTTTTTCCTCTCTTCACCAAAGCCATGTTTTTTAGTTGTGGCGAAAAATAAGAAATCCATACATCAACATATCGCTTTCGTTACCTTAAATTTTGGCTTGTTATGAAGGCATGTCATAACGTTTCTAGTCACAACTCACAAGCATACCAACGACCATGATAAATCCAAAAAGTAGAAACAATCTATTATCTAAACCCCCAAAAGACAAAAGAAAAAAGTAGAAAGAAAAGGTAGGCAGAGATATAATGCTGGTTTTATTTGTTTGTTAAAAGATATTGCTATTTCTGCCAATATTAAAACTTCACTTAGGAAGACTTGAACCTACCACACGTTAGTGACTAATGAGAGCCACTAGATAATTGCATGCATCCCACACTAGTACTAATTTTCTAGGGATATTAGAGTTTTCTAATCACCTACTTCCTACTATGTGTATGTTATCTACTGGCGTGGATGCTTTTAAAGATGTTACGTTATTATTTTGTTCGGTTTGGAAAACGGCTCAATCGTTATGAGTTCGTAAGACACATACATTGTTCCATGATAAAATGCAACCCCACGAACCATTTGCGACAAGCAAAACAACATGGTCAAAATTAAAAGCTAACAATTAGCCAGCGATTCAAAAAGTCAACCTTCTAGATGGATTTAACAACATATCGATAGGATTCAAGATTAAAAATAAGCACACTCTTATTAATGTTAAAAAACGAATGAGATGAAAATATTTGGCGTGTTCACACACATAATCTAGAAGACAGATTCGAGTTGCTCTCCTTTGTTTTGCTTTGGGAGGGACCCATTATTACCGCCCAGCAGCTTCCCAGCCTTCCTTTATAAGGCTTAATTTATATTTATTTAAATTTTATATGTTCTTCTATTATAATACTAAAAGGGGAATACAAATTTCTACAGAGGATGATATTCAATCCACGGTTCACCCAAACCGATTTTATAAAATTTATTATTAAATCTTTTTTAATTGTTAAATTGGTTTAAATCTGAACTCTGTTTACTTACATTGATTAAAATTCTAAACCATCATAAGTAAAAAATAATATGATTAAGACTAATAAATCTTAATAGTTAATACTACTCGGTTTACTACATGAAATTTCATACCATCAATTGTTTTAATAATCTTTAAAATTGTTAGGACCGGTAAAACCATACCAATTAAACCGGAGATCCATATTAATTTAATTAAGAAAATAAAAATAAAAGGAATAAATTGTCTTATTTAAACGCTGACTTCACTGTCTTCCTCCCTCC
-```
-#### PPM format
-
-The function receives a positional probability matrix as input and transforms it into a positional weight matrix. The matrix format is Homer. Its structure is:
-- a header starting with a greater than sign
-- four columns separated by tabs, containing the probabilities of finding four letters of the genetic alphabet in each position. The number of rows is equal to the length of the matrix (excluding the header).
-
-##### Example of PPM
-
- ```
->ARF1 - MA0942.1      
-0.312 0.207 0.22  0.262
-0.008 0.088 0.004 0.901
-0.002 0.002 0.993 0.002
-0.007 0.001 0.003 0.989
-0.001 0.992 0.002 0.004
-0.002 0.002 0.993 0.004
-0.004 0.001 0.993 0.003
-0.001 0.276 0.002 0.722
+AACATTTCAAACCACTTGTTCTCTTTTATGTTTTGGTAAGAGCTATCTTC...
 ```
 
-#### DEG list format
+**Position probability matrix (Homer).** A header line starting with `>`, then one
+row per position with the tab-separated probabilities of A, C, G and T:
 
-Table contains gene ID's and log2FC and p-adj values for each RNA-seq experiment separated by tabulation. The number of experiments can be any. 
+```
+>ARF1 - MA0942.1
+0.312	0.207	0.22	0.262
+0.008	0.088	0.004	0.901
+0.002	0.002	0.993	0.002
+0.007	0.001	0.003	0.989
+0.001	0.992	0.002	0.004
+0.002	0.002	0.993	0.004
+0.004	0.001	0.993	0.003
+0.001	0.276	0.002	0.722
+```
 
-#### DEG list example
+**Differentially expressed genes.** Tab-separated: gene ID, then log2 fold change
+and adjusted p-value for each experiment (any number of experiments).
 
- ```
-AT1G01200 0.798468892 0.999963365 0.262868659 0.858116364
-AT1G01210 0.24716958  0.999963365 0.299284788 0.795936156
-AT1G01220 -0.130354152  0.999963365 0.243543128 0.811947466
-AT1G01225 -0.398548781  0.999963365 0.080885801 0.980423396
-AT1G01230 0.094237385 0.999963365 -0.401992625  0.372281038
- ```
-
-#### iSensor panel object
-
-This is an example of panel with two genes 
-
-- *genes*
-
-`  "AT1G04730" "AT1G05055" `
-
-- *gene_metadata*
-
-| GeneID | Chromosome | SiteStart | SiteEnd | Strand | Site | ToTSS | GeneName | GeneFullName | 
-| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
-| AT1G04730 | 1 | 1331105 | 1331112 | 1 | TATCGGAA | 28 | CTF18 | CHROMOSOME TRANSMISSION FIDELITY 18 |
-| AT1G05055 | 1 | 1451800 | 1451807 | 1 | TGTCGTGA | 922 | GTF2H2 | general transcription factor II H2 |
-
-*Strand* takes the value `1` if the site is on the direct chain and `0` if on the reverse chain.
-
-- *panel_metadata*
-
-| Species | PromoterLength | MotifModelName | PanelType | TranscriptomesExperimentInfo | DateCreated |
-| ---- | ---- |----|----|----|----|
-| Arabidopsis thaliana | 1500 | ARF1 - MA0942.1 | cis-trans | Auxin 1h, auxin 4h | 2025-06-20 |
-
-
-#### iSensorsCisTransPanelCreate Usage examples
-
-- *Arabidopsis thaliana*, cis panel.
-
-` iSensorsCisTransPanelCreate(panel_name = 'cis_panel', 
-      species = 'Arabidopsis thaliana', 
-      promoters_set = 'At_TAIR10_promoters.fas',
-        ppm = 'ARF1.txt',
-          panel_type = 'cis', 
-      trivial_names_file = 'at_trivial.txt')`
-
-- *Arabidopsis thaliana*, UP cis-trans panel.
-
-` iSensorsCisTransPanelCreate(panel_name = 'cis-trans_panel', 
-                      species = 'Arabidopsis thaliana',
-      promoters_set = 'At_TAIR10_promoters.fas',
-                      ppm = 'ARF1.txt',
-                      deg_list = 'auxin_degs.txt',
-                      min_dataset_number = 1,
-                      panel_type = 'UP',
-                      transcriptomes_info = 'Auxin 1h, auxin 4h') `
-
-### iSensorsCisTransPanelCreate Output
-------
-
-The function creates an object of the **GenePanel** class and writes it to an ***rda*** file with the name specified in the panel_name variable. The function saves the ***rda*** file to the **iSensors** subdirectory in the working directory. If the working directory does not have an **iSensors** subdirectory, the function creates it. The function does NOT save the **GenePanel** object to the working environment in R.
-
-[↑ Back to top](#table-of-contents)
+```
+AT1G01200	0.798	0.999	0.263	0.858
+AT1G01210	0.247	0.999	0.299	0.796
+```
 
 </details>
 
-## Quick Start
+### Panel structure
 
-Here's an example of how to load the package, check its version, explore documentation, and run a basic analysis:
+A panel is a list of class `GenePanel` with:
 
-### Using iSensors via default gene panels
+- `genes`: the gene IDs;
+- `genes_metadata`: a table with gene ID, short and full name (cis panels add
+  chromosome, site position, strand, site sequence and distance to the TSS);
+- `panel_metadata`: species, panel type, description and creation date (cis panels
+  add promoter length, motif name and transcriptome information).
 
-```R
-# Load the package
-library(iSensors)
+## Tutorial
 
-# Check installed version
-packageVersion("iSensors")
+[`tutorial/tutorial.ipynb`](tutorial/tutorial.ipynb) walks through a full analysis
+of the test dataset in `tutorial/testData/`, from loading panels to plotting
+scores.
 
-# Access general help page
-help("iSensors")
+## Authors
 
-# Load test data (Seurat object)
-testData <- readRDS("testData/testSeurData.rds")
-
-# Load test panel with meta-panels
-testPanel <- LoadSensors(setName = 'testPanelSet', species = 'AT', hormone = 'aux', customPanels = FALSE,
-                          randomInfo = list('n' = 3, 'sizes' = c(100, 200, 300), majortrend = TRUE),
-                          metaPanels = list(
-                            'meta1' = list('srcPanels' = c("AT_aux_cis_DR5_ARF1", "AT_aux_cistrans_DR5_ARF5_2_up"), rule = mean),
-                            'meta2' = list('srcPanels' = c("AT_aux_cis_DR5_ARF1", "AT_aux_cistrans_DR5_ARF5_2_up"), rule = prod))
-                          )
-
-# Calculate signaling scores for selected panels
-result <- CalcSensors(testData,
-                      seurLayer = "data",
-                      panelSet = testPanel,
-                      signals = c("mean_normed", "median"))
-```
-
-### Using iSensors via custom trans gene panels
-
-```R
-# Load test data (Seurat object)
-
-testData <- readRDS("testSeurData.rds")
-
-# Creating trans panel
-
-iSensorsTransPanelCreate(panel_name = 'customTransPanel', 
-                         gene_list = c('AT1G01010', 'AT1G01030', 'AT1G01040'), 
-                         species = 'Arabidopsis thaliana', 
-                         panel_description = 'Arabidopsis_trans_panel_with_3_genes')
-
-
-# Load test panel with meta-panels
-
-customTransPanel <- LoadSensors(setName = 'customTransPanelSet',
-                               customPanels = TRUE,
-                               randomInfo = list('n' = 3, 'sizes' = c(100, 200, 300), majortrend = TRUE),
-                               metaPanels = list('meta1' = list('srcPanels' = c("AT_aux_cis_DR5_ARF1", "AT_aux_cistrans_DR5_ARF5_2_up"), rule = mean),
-                                                 'meta2' = list('srcPanels' = c("AT_aux_cis_DR5_ARF1", "AT_aux_cistrans_DR5_ARF5_2_up"), rule = prod))
-)
-
-# Calculate signaling scores for selected panels
-
-result <- CalcSensors(testData,
-                      seurLayer = "data",
-                      panelSet = customTransPanel,
-                      signals = c("mean_normed", "median"))
-```
-
-### Using iSensors via custom cis-trans gene panels
-
-```R
-# Load test data (Seurat object)
-
-testData <- readRDS("testSeurData.rds")
-
-# Creating trans panel
-
-iSensorsCisTransPanelCreate(panel_name = 'customCisTransPanel',
-                            gene_list = c('AT1G01010', 'AT1G01030', 'AT1G01040'),
-                            species = 'Arabidopsis thaliana',
-                            panel_description = 'Arabidopsis_cistrans_panel_with_3_genes')
-
-
-# Load test panel with meta-panels
-
-customCisTransPanel <- LoadSensors(setName = 'customCisTransPanelSet',
-                               customPanels = TRUE,
-                               randomInfo = list('n' = 3, 'sizes' = c(100, 200, 300), majortrend = TRUE),
-                               metaPanels = list('meta1' = list('srcPanels' = c("AT_aux_cis_DR5_ARF1", "AT_aux_cistrans_DR5_ARF5_2_up"), rule = mean),
-                                                 'meta2' = list('srcPanels' = c("AT_aux_cis_DR5_ARF1", "AT_aux_cistrans_DR5_ARF5_2_up"), rule = prod))
-)
-
-# Calculate signaling scores for selected panels
-
-result <- CalcSensors(testData,
-                      seurLayer = "data",
-                      panelSet = customCisTransPanel,
-                      signals = c("mean_normed", "median"))
-```
-
-[↑ Back to top](#table-of-contents)
-
-
-
+Maxim Rybakov (maintainer), Elena Zemlyanskaya, Victoria Mironova and Vladislav
+Dolgikh. Released under the MIT licence.

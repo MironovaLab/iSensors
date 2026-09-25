@@ -4,7 +4,6 @@
 #' using predefined and custom gene panels. It allows users to compute signaling activity 
 #' scores, manage gene panels, and perform various analyses on single-cell datasets.
 #'
-#' @docType package
 #' @name iSensors
 #' @aliases iSensors-package
 #' @author 
@@ -14,4 +13,4 @@
 #' Vladislav Dolgikh [aut]
 #' @keywords package
 #' @seealso \code{\link{LoadSensors}}, \code{\link{CalcSensors}}, \code{\link{iSensorsCisTransPanelCreate}}, \code{\link{iSensorsTransPanelCreate}}
-NULL
+"_PACKAGE"

@@ -43,7 +43,6 @@
 #' }
 #'
 #' @import Biostrings
-#' @import universalmotif
 #' @import dplyr
 #' @import magrittr
 #' @import stringr
@@ -52,7 +51,11 @@
 
 iSensorsCisTransPanelCreate <- function(panel_name, species, promoters_set, ppm, deg_list, min_dataset_number, trivial_names_file, panel_type, transcriptomes_info)
 {
-  
+  if (!requireNamespace("universalmotif", quietly = TRUE)) {
+    stop('Creating cis panels needs the Bioconductor package "universalmotif": ',
+         'BiocManager::install("universalmotif")')
+  }
+
   if(missing(promoters_set))
   {
     stop("Error: The promoters set FASTA file must be loaded")
@@ -95,7 +98,7 @@ iSensorsCisTransPanelCreate <- function(panel_name, species, promoters_set, ppm,
   motif_length <- nrow(ppm)
   ppm <- log2((ppm + 0.00000001) / 0.25)
   ppm <- as.matrix(ppm) %>% t()
-  ppm <- create_motif(ppm, type = 'PWM')
+  ppm <- universalmotif::create_motif(ppm, type = 'PWM')
   
   if(!missing(deg_list)) #new
   {
@@ -144,7 +147,7 @@ iSensorsCisTransPanelCreate <- function(panel_name, species, promoters_set, ppm,
     padjes[is.na(padjes)] <- 1
     FCs[is.na(FCs)] <- 0
     
-    # Функция для определения статуса гена
+    # Status of a gene: DEG when significant in enough datasets
     get_deg_status <- function(row)
     {
       count_de <- sum(row < 0.05)
@@ -202,8 +205,8 @@ iSensorsCisTransPanelCreate <- function(panel_name, species, promoters_set, ppm,
     transcriptomes$deg_status <- FCs$fc
   }
   
-  score_unweighted <- motif_pvalue(ppm, pvalue = 0.0001, k = motif_length)
-  scan <- scan_sequences(ppm, promoters, threshold.type = 'logodds.abs', threshold = score_unweighted, RC = TRUE,
+  score_unweighted <- universalmotif::motif_pvalue(ppm, pvalue = 0.0001, k = motif_length)
+  scan <- universalmotif::scan_sequences(ppm, promoters, threshold.type = 'logodds.abs', threshold = score_unweighted, RC = TRUE,
                          no.overlaps = TRUE)
   scan <- as.data.frame(scan)
   motif_scanning_results <- data.frame(row.names = c(1:nrow(scan)))
