@@ -1,4 +1,4 @@
 library(testthat)
 library(iSensors)
 
-# test_check("iSensors")
+test_check("iSensors")

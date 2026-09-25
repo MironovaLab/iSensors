@@ -1,3 +1,16 @@
+# Smallest number of genes a panel may have, when created and when scored
+min_panel_genes <- 3L
+
+#' @keywords internal
+check_panel_size <- function(genes, panel_name) {
+  n <- length(unique(genes))
+  if (n < min_panel_genes) {
+    stop(sprintf('Panel "%s" has %d gene(s); a panel needs at least %d genes.',
+                 panel_name, n, min_panel_genes), call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
 #' @keywords internal
 check_iSensorsPanel_obj <- function(panel_obj) {
   
@@ -10,13 +23,14 @@ check_iSensorsPanel_obj <- function(panel_obj) {
   }
   
   check_iSensors_panel(panel_obj$genes)
+  check_panel_size(panel_obj$genes, panel_obj$name)
   return(TRUE)
 }
 
 #' @keywords internal
 check_iSensors_obj <- function(iSensor_obj, check_exprData = FALSE, check_panelSet = FALSE,
                                check_signals = FALSE, check_sampleLabels = FALSE) {
-  # Проверка класса
+  # Class check
   if (!inherits(iSensor_obj, "iSensors")) {
     stop("Object is not of class 'iSensors'")
   }
@@ -87,6 +101,10 @@ check_random_info <- function(randomInfo) {
   if (!is.numeric(randomInfo$sizes) || length(randomInfo$sizes) != randomInfo$n) {
     stop("`randomInfo$sizes` must be a numeric vector of length equal to `randomInfo$n`.")
   }
+
+  if (any(randomInfo$sizes < min_panel_genes)) {
+    stop("`randomInfo$sizes` must be at least ", min_panel_genes, " genes each.")
+  }
   
   if (!is.logical(randomInfo$majortrend) || length(randomInfo$majortrend) != 1) {
     stop("`randomInfo$majortrend` must be a single logical value (TRUE or FALSE).")
@@ -108,7 +126,7 @@ check_metaPanels <- function(metaPanels) {
       stop(paste0("Each meta panel must be a list. Problem with: ", panel_name))
     }
     
-    # Проверка наличия srcPanels и rule
+    # srcPanels and rule must be present
     if (!("srcPanels" %in% names(panel))) {
       stop(paste0("Missing 'srcPanels' in meta panel: ", panel_name))
     }
@@ -116,17 +134,12 @@ check_metaPanels <- function(metaPanels) {
       stop(paste0("Missing 'rule' in meta panel: ", panel_name))
     }
     
-    # Проверка srcPanels
+    # srcPanels must be a character vector
     if (!is.character(panel$srcPanels)) {
       stop(paste0("'srcPanels' must be a character vector in meta panel: ", panel_name))
     }
-    
-    # invalid_names <- setdiff(panel$srcPanels, available_panels)
-    # if (length(invalid_names) > 0) {
-    #   stop(paste0("metaPanel '", panel_name, "' references unknown panels: ", paste(invalid_names, collapse = ", ")))
-    # }
-    
-    # Проверка rule — это функция
+
+    # rule must be a function
     if (!is.function(panel$rule)) {
       stop(paste0("'rule' must be a function in meta panel: ", panel_name))
     }

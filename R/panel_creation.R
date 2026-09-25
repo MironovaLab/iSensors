@@ -10,7 +10,7 @@
 #' The third is a data frame panel_metadata containing the information about the species, gene panel type, gene panel description, creation date. 
 #' The function writes the panel as an rda file in the user_panels directory (and creates it if this directory doesn't exist).
 #' 
-#' @param panel_name The name of the panel to create. The function will create a GenePanel object with this name and save it as rda file in the user_panels directory.
+#' @param panel_name The name of the panel to create. The panel is saved as \code{iSensors/<panel_name>.rda} in the working directory (the folder is created if needed).
 #' @param species Name of species for which the trans panel is created.
 #' @param promoters_set Path to a FASTA file containing promoter sequences. 
 #' @param ppm Path to a positional probability matrix file in Homer format. 
@@ -43,16 +43,20 @@
 #' }
 #'
 #' @import Biostrings
-#' @import universalmotif
 #' @import dplyr
 #' @import magrittr
 #' @import stringr
 #' @import purrr
+#' @return The panel, a list of class \code{GenePanel}, invisibly.
 #' @export
 
 iSensorsCisTransPanelCreate <- function(panel_name, species, promoters_set, ppm, deg_list, min_dataset_number, trivial_names_file, panel_type, transcriptomes_info)
 {
-  
+  if (!requireNamespace("universalmotif", quietly = TRUE)) {
+    stop('Creating cis panels needs the Bioconductor package "universalmotif": ',
+         'BiocManager::install("universalmotif")')
+  }
+
   if(missing(promoters_set))
   {
     stop("Error: The promoters set FASTA file must be loaded")
@@ -95,7 +99,7 @@ iSensorsCisTransPanelCreate <- function(panel_name, species, promoters_set, ppm,
   motif_length <- nrow(ppm)
   ppm <- log2((ppm + 0.00000001) / 0.25)
   ppm <- as.matrix(ppm) %>% t()
-  ppm <- create_motif(ppm, type = 'PWM')
+  ppm <- universalmotif::create_motif(ppm, type = 'PWM')
   
   if(!missing(deg_list)) #new
   {
@@ -144,7 +148,7 @@ iSensorsCisTransPanelCreate <- function(panel_name, species, promoters_set, ppm,
     padjes[is.na(padjes)] <- 1
     FCs[is.na(FCs)] <- 0
     
-    # Функция для определения статуса гена
+    # Status of a gene: DEG when significant in enough datasets
     get_deg_status <- function(row)
     {
       count_de <- sum(row < 0.05)
@@ -202,8 +206,8 @@ iSensorsCisTransPanelCreate <- function(panel_name, species, promoters_set, ppm,
     transcriptomes$deg_status <- FCs$fc
   }
   
-  score_unweighted <- motif_pvalue(ppm, pvalue = 0.0001, k = motif_length)
-  scan <- scan_sequences(ppm, promoters, threshold.type = 'logodds.abs', threshold = score_unweighted, RC = TRUE,
+  score_unweighted <- universalmotif::motif_pvalue(ppm, pvalue = 0.0001, k = motif_length)
+  scan <- universalmotif::scan_sequences(ppm, promoters, threshold.type = 'logodds.abs', threshold = score_unweighted, RC = TRUE,
                          no.overlaps = TRUE)
   scan <- as.data.frame(scan)
   motif_scanning_results <- data.frame(row.names = c(1:nrow(scan)))
@@ -426,7 +430,8 @@ iSensorsCisTransPanelCreate <- function(panel_name, species, promoters_set, ppm,
                                 'PanelType', 'TranscriptomesExperimentInfo', 'DateCreated')
   
   panels <- output$'GeneID' %>% unique()
-  
+  check_panel_size(panels, panel_name)
+
   output <- unique(output)
   
   panels_object <- list(
@@ -440,9 +445,12 @@ iSensorsCisTransPanelCreate <- function(panel_name, species, promoters_set, ppm,
   if (!dir.exists('iSensors')) {
     dir.create('iSensors') }
   
-  assign(panel_name, panels_object, envir = parent.frame())
-  save(list = panel_name, file = paste0("iSensors/", panel_name, ".rda"))
-  rm(list = panel_name, envir = parent.frame())
+  # Save from a private environment, so the call works from the console or a
+  # function and leaves the caller's objects untouched
+  save_env <- new.env()
+  assign(panel_name, panels_object, envir = save_env)
+  save(list = panel_name, envir = save_env, file = paste0("iSensors/", panel_name, ".rda"))
+  invisible(panels_object)
 }
 
 
@@ -455,7 +463,7 @@ iSensorsCisTransPanelCreate <- function(panel_name, species, promoters_set, ppm,
 #' The third is a data frame panel_metadata containing the information about the species, gene panel type, gene panel description, creation date. 
 #' The function writes the panel to an object in the current environment and saves it as an rda file in the current working directory.
 #' 
-#' @param panel_name The name of the panel to create. The function will create a GenePanel object with this name and save it as rda file in the user_panels directory.
+#' @param panel_name The name of the panel to create. The panel is saved as \code{iSensors/<panel_name>.rda} in the working directory (the folder is created if needed).
 #' @param species Name of species for which the trans panel is created.
 #' @param gene_list Vector of genes. Can be supplied as a vector c('AT1G01010', 'AT1G01030', 'AT1G01040'), or as a .txt file.
 #' @param trivial_names_file List of trivial gene names as a .txt file. (optional)
@@ -489,6 +497,7 @@ iSensorsCisTransPanelCreate <- function(panel_name, species, promoters_set, ppm,
 #' @import dplyr
 #' @import magrittr
 #' @import stringr
+#' @return The panel, a list of class \code{GenePanel}, invisibly.
 #' @export
 
 iSensorsTransPanelCreate <- function(panel_name, species, gene_list, trivial_names_file, panel_description)
@@ -569,6 +578,7 @@ iSensorsTransPanelCreate <- function(panel_name, species, gene_list, trivial_nam
   genes_metadata <- unique(genes_metadata)
   colnames(genes_metadata) <- c('GeneID', 'GeneName', 'GeneFullName')
   genes <- genes_metadata$GeneID %>% unique()
+  check_panel_size(genes, panel_name)
   date_of_analysis <- Sys.Date()
   panel_type <- 'Trans'
   panel_description <- panel_description
@@ -598,8 +608,11 @@ iSensorsTransPanelCreate <- function(panel_name, species, gene_list, trivial_nam
   if (!dir.exists('iSensors')) {
     dir.create('iSensors') }
   
-  assign(panel_name, panels_object, envir = parent.frame())
-  save(list = panel_name, file = paste0("iSensors/", panel_name, ".rda"))
-  rm(list = panel_name, envir = parent.frame())
+  # Save from a private environment, so the call works from the console or a
+  # function and leaves the caller's objects untouched
+  save_env <- new.env()
+  assign(panel_name, panels_object, envir = save_env)
+  save(list = panel_name, envir = save_env, file = paste0("iSensors/", panel_name, ".rda"))
+  invisible(panels_object)
 
 }

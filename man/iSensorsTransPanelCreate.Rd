@@ -13,7 +13,7 @@ iSensorsTransPanelCreate(
 )
 }
 \arguments{
-\item{panel_name}{The name of the panel to create. The function will create a GenePanel object with this name and save it as rda file in the user_panels directory.}
+\item{panel_name}{The name of the panel to create. The panel is saved as \code{iSensors/<panel_name>.rda} in the working directory (the folder is created if needed).}
 
 \item{species}{Name of species for which the trans panel is created.}
 
@@ -22,6 +22,9 @@ iSensorsTransPanelCreate(
 \item{trivial_names_file}{List of trivial gene names as a .txt file. (optional)}
 
 \item{panel_description}{Description of the panel}
+}
+\value{
+The panel, a list of class \code{GenePanel}, invisibly.
 }
 \description{
 The function receives a list of gene IDs as input (either as a vector or as a txt file), and the the corresponding trivial gene names in txt format (optional).
