@@ -59,8 +59,10 @@
   behaviour.
 * The test suite now runs with `R CMD check` (the runner was in the wrong folder
   and disabled), with new tests for the scores and the panel fixes.
-* Removed developer scratch scripts (`scripts/`) and Jupyter checkpoints; the
-  tutorial script is now `tutorial/tutorial.R`.
+* Removed developer scratch scripts (`scripts/`) and the outdated `tutorial/`
+  folder (script, notebook and 34 MB of test data); the tutorial now lives at
+  <https://mironovalab.github.io/isensors-tutorial.html>, with its scripts in
+  the iSensors-supplementary repository.
 
 ## Known issues
 
